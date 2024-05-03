@@ -1,12 +1,12 @@
-name: Delete statuses from last hour
-run-name: ${{ github.actor }} is deleting statuses for the last hour
+name: Delete statuses
+run-name: ${{ github.actor }} is deleting statuses
 on:
   workflow_dispatch:
     inputs:
-      last_n_hours:
-        description: 'Since how many hours ago'
+      since_minutes_ago:
+        description: 'Since how many minutes ago'
         required: true
-        default: 1
+        default: 60
 
 jobs:
   Delete-Statuses:
@@ -22,7 +22,7 @@ jobs:
       - name: List working directory
         run:  echo "${{ github.workspace }}"
       - name: Delete statuses
-        run: poetry run python3 delete_statuses.py ${{ github.event.inputs.last_n_hours }}
+        run: poetry run python3 delete_statuses.py ${{ github.event.inputs.since_minutes_ago }}
         env: # Or as an environment variable
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
