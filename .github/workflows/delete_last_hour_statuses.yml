@@ -1,8 +1,15 @@
 name: Delete statuses from last hour
 run-name: ${{ github.actor }} is deleting statuses for the last hour
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      last_n_hours:
+        description: 'Since how many hours ago'
+        required: true
+        default: 1
+
 jobs:
-  Explore-GitHub-Actions:
+  Delete-Statuses:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,5 +22,7 @@ jobs:
       - name: List working directory
         run:  echo "${{ github.workspace }}"
       - name: Delete statuses
-        run: poetry run python3 delete_statuses.py
+        run: poetry run python3 delete_statuses.py ${{ github.event.inputs.last_n_hours }}
+        env: # Or as an environment variable
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
