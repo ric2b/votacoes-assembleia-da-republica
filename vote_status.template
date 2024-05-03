@@ -1,7 +1,7 @@
 $result
 
 📝️️ $title
-🏷 $type ($authors)
+🔗 $type ($authors) - $initiative_uri
 
 🗳️ $phase ($date):
 $vote_detail

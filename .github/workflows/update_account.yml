@@ -1,0 +1,20 @@
+name: Update account
+run-name: Updating account
+on:
+  workflow_dispatch:
+
+jobs:
+  Update-Account:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pipx install poetry
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'poetry'
+      - run: poetry install
+      - name: Update account
+        run: poetry run python3 update_account.py
+        env:
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}

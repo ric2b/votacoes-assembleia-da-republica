@@ -43,7 +43,7 @@ def list_wrap(raw) -> list:
     return raw if isinstance(raw, list) else [raw]
 
 def render_vote(vote: dict) -> str:
-    with open('vote_toot.template', 'r') as toot_template_file:
+    with open('vote_status.template', 'r') as toot_template_file:
         toot_template = Template(toot_template_file.read())
         vote_detail = parse_votes(vote['vote_detail'])
 
@@ -59,13 +59,14 @@ def render_vote(vote: dict) -> str:
                 )
 
         return toot_template.substitute(
-            result = 'Aprovado 🟢' if vote['result'] == 'Aprovado' else 'Rejeitado 🔴',
+            result = '🟢 Aprovado' if vote['result'] == 'Aprovado' else '🔴 Rejeitado',
             date = vote['date'],
             type = vote['initiative_type'],
             authors = ', '.join(vote['authors']),
             title = vote['title'],
             phase = vote['phase'],
             vote_detail = rendered_vote_detail,
+            initiative_uri = vote['initiative_uri'],
         )
 
 def fetch_initiatives_for_legislature(legislature):
