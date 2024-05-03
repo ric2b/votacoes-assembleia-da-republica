@@ -18,7 +18,6 @@ JSON_URIS = {
     'XV': 'https://app.parlamento.pt/webutils/docs/doc.txt?path=9pmNwL6GoXv7I7%2b%2fqIbTfPny7HRpBWiyHiyClKcla8C2sa9EbIgDyIZa9rTsuI6jG3KgMosUtvKl%2fek7BtzUee6kPEU6gITunDOdPb0T7gMnfM5%2bUWWRn6r2t42DSM63%2fJ8az36bpRSJRpyggVhCBBQaOYNMwQPVFMNSkpSUQL2zczuCdhZgMg55hQZ%2fYBmuFwowZHRTHoSMFhd7ILx58tsqdWEWAdDti73T55KxYGPH6u80%2bQVLC9wvYuYm433%2bksaSYCLQ3J%2fUA5OZBrd4ixlscy1B%2b05uflW2PMAzAB8jsVMIoGk97YMNCzkxHccRMsmN2Ge2h6jIbN8uYcpbzRUUR0ImHSj1NHlc4Hq%2bcVc%3d&fich=IniciativasXV_json.txt&Inline=true',
 }
 
-
 class MastodonClient:
     def __init__(self) -> None:
         self.client = Mastodon(access_token=MASTODON_ACCESS_TOKEN, api_base_url="https://masto.pt")
@@ -28,21 +27,17 @@ class MastodonClient:
         return { field['name']: field['value'] for field in raw_fields }
 
     def update_fields(self, fields: dict[str, str]) -> None:
-#         print('updating fields... NOT!')
-#         return
         self.client.account_update_credentials(fields = fields.items())
 
     def post_vote(self, raw_vote: dict) -> str:
-        import pprint
-        print('posting votes... NOT!')
-#         pprint.pp(raw_vote)
-        print(render_vote(raw_vote))
-        print('--------------------')
-        return
+#         import pprint
+#         print('posting votes... NOT!')
+#         print(render_vote(raw_vote))
+#         print('--------------------')
+#         return
 
         vote_id = raw_vote['oevId']
         self.client.status_post(render_vote(raw_vote), idempotency_key = vote_id)
-
 
 def list_wrap(raw) -> list:
     return raw if isinstance(raw, list) else [raw]
@@ -71,9 +66,6 @@ def render_vote(vote: dict) -> str:
             title = vote['title'],
             phase = vote['phase'],
             vote_detail = rendered_vote_detail,
-#             in_favour = ', '.join(vote_detail['in_favour']),
-#             against = ', '.join(vote_detail['against']),
-#             abstained = ', '.join(vote_detail['abstained']),
         )
 
 def fetch_initiatives_for_legislature(legislature):
@@ -162,8 +154,7 @@ if __name__ == '__main__':
     account_fields = m.fetch_fields()
 
     print('parsing votes')
-#     last_seen_index = account_fields.get(LAST_SEEN_INITIATIVE_COUNT, 1) - 1
-    last_seen_index = 0
+    last_seen_index = account_fields.get(LAST_SEEN_INITIATIVE_COUNT, 1) - 1
     only_vote_types = ['Votação Deliberação', 'Votação na generalidade', 'Votação global', 'Votação final global']
 
     new_votes = parse_initiatives(initiatives, only_vote_types = only_vote_types, from_index = last_seen_index)
