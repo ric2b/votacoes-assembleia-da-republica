@@ -2,6 +2,15 @@ name: Update account
 run-name: Updating account
 on:
   workflow_dispatch:
+    inputs:
+      debug_mode:
+        description: 'Print votes to stdout instead of posting'
+        required: false
+        default: false
+      skip_all:
+        description: 'Mark all existing votes as skipped'
+        required: false
+        default: false
 
 jobs:
   Update-Account:
@@ -18,3 +27,5 @@ jobs:
         run: poetry run python3 update_account.py
         env:
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
+          SKIP_ALL: ${{ github.event.inputs.skip_all }}
