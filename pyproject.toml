@@ -1,0 +1,15 @@
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+mastodon-py = "^1.8.1"
+requests = "^2.31.0"
+beautifulsoup4 = "^4.12.3"
+lxml = "^5.2.1"
+python-dotenv = "^1.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
