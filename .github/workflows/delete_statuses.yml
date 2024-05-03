@@ -19,10 +19,7 @@ jobs:
           python-version: '3.12'
           cache: 'poetry'
       - run: poetry install
-      - name: List working directory
-        run:  echo "${{ github.workspace }}"
       - name: Delete statuses
         run: poetry run python3 delete_statuses.py ${{ github.event.inputs.since_minutes_ago }}
-        env: # Or as an environment variable
+        env:
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
