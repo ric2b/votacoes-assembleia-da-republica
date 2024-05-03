@@ -1,3 +1,5 @@
+import json
+import pprint
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -8,9 +10,8 @@ from string import Template
 
 load_dotenv()
 MASTODON_ACCESS_TOKEN = os.environ['MASTODON_ACCESS_TOKEN']
-
-LAST_POSTED_VOTE_ID_KEY = 'last_posted_oevid'
-LAST_SEEN_INITIATIVE_COUNT = 'last_seen_initiative_count'
+DEBUG_MODE = os.environ.get('DEBUG_MODE', 'false').lower() == 'true'
+SKIP_ALL = os.environ.get('SKIP_ALL', 'false').lower() == 'true'
 
 # full list https://www.parlamento.pt/Cidadania/Paginas/DAIniciativas.aspx
 JSON_URIS = {
@@ -18,25 +19,45 @@ JSON_URIS = {
     'XV': 'https://app.parlamento.pt/webutils/docs/doc.txt?path=9pmNwL6GoXv7I7%2b%2fqIbTfPny7HRpBWiyHiyClKcla8C2sa9EbIgDyIZa9rTsuI6jG3KgMosUtvKl%2fek7BtzUee6kPEU6gITunDOdPb0T7gMnfM5%2bUWWRn6r2t42DSM63%2fJ8az36bpRSJRpyggVhCBBQaOYNMwQPVFMNSkpSUQL2zczuCdhZgMg55hQZ%2fYBmuFwowZHRTHoSMFhd7ILx58tsqdWEWAdDti73T55KxYGPH6u80%2bQVLC9wvYuYm433%2bksaSYCLQ3J%2fUA5OZBrd4ixlscy1B%2b05uflW2PMAzAB8jsVMIoGk97YMNCzkxHccRMsmN2Ge2h6jIbN8uYcpbzRUUR0ImHSj1NHlc4Hq%2bcVc%3d&fich=IniciativasXV_json.txt&Inline=true',
 }
 
+class StateStorage:
+    def __init__(self, file_path = 'state.json'):
+        self.file_path = file_path
+
+    def __enter__(self):
+        try:
+            with open(self.file_path, 'r') as state_file:
+                self.state = json.load(state_file)
+        except FileNotFoundError:
+            self.state = {}
+
+        return self
+
+    def __exit__(self, *args):
+        with open(self.file_path, 'w') as state_file:
+            json.dump(self.state, state_file)
+
+    def mark_vote_published(self, vote_id: str) -> None:
+        self.state[vote_id] = 'published'
+
+    def skip_vote(self, vote_id: str) -> None:
+        if vote_id not in self.state:
+            self.state[vote_id] = 'skipped'
+
+    def is_new_vote(self, vote_id: str) -> bool:
+        return vote_id not in self.state
+
 class MastodonClient:
     def __init__(self) -> None:
         self.client = Mastodon(access_token=MASTODON_ACCESS_TOKEN, api_base_url="https://masto.pt")
 
-    def fetch_fields(self) -> dict[str, str]:
-        raw_fields = self.client.me()['fields']
-        return { field['name']: field['value'] for field in raw_fields }
-
-    def update_fields(self, fields: dict[str, str]) -> None:
-        self.client.account_update_credentials(fields = fields.items())
-
     def post_vote(self, raw_vote: dict) -> str:
-#         import pprint
-#         print('posting votes... NOT!')
-#         print(render_vote(raw_vote))
-#         print('--------------------')
-#         return
+        if DEBUG_MODE:
+            print(f'would post vote:')
+            print(render_vote(raw_vote))
+            print('--------------------')
+            return
 
-        vote_id = raw_vote['oevId']
+        vote_id = raw_vote['vote_id']
         self.client.status_post(render_vote(raw_vote), idempotency_key = vote_id)
 
 def list_wrap(raw) -> list:
@@ -96,9 +117,6 @@ def parse_authorship(initiative) -> list[str]:
     authors = list_wrap(initiative['iniAutorGruposParlamentares']['pt_gov_ar_objectos_AutoresGruposParlamentaresOut'])
     return [author['GP'] for author in authors]
 
-def initiatives_count(raw_initiatives) -> int:
-    return len(raw_initiatives['ArrayOfPt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut']['pt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut'])
-
 def parse_initiatives(raw_initiatives, only_vote_types = ['Votação final global'], from_index = 0) -> list[dict]:
     initiatives = raw_initiatives['ArrayOfPt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut']['pt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut']
 
@@ -112,7 +130,7 @@ def parse_initiatives(raw_initiatives, only_vote_types = ['Votação final globa
                     raw_vote = event['votacao']['pt_gov_ar_objectos_VotacaoOut']
 
                     vote = {
-                        'oevId': event['oevId'],
+                        'vote_id': event['oevId'],
                         'initiative_type': initiative['iniDescTipo'],
                         'initiative_type_code': initiative['iniTipo'],
                         'title': initiative['iniTitulo'],
@@ -147,29 +165,28 @@ def filter_new_votes(all_votes, last_posted_oevid):
         raise e
 
 if __name__ == '__main__':
-    print('fetching initiatives')
-    initiatives = fetch_initiatives_for_legislature('XVI')
+    with StateStorage() as state:
+        print('fetching initiatives')
+        initiatives = fetch_initiatives_for_legislature('XVI')
 
-    print('fetching account fields')
-    m = MastodonClient()
-    account_fields = m.fetch_fields()
+        print('parsing votes')
+        only_vote_types = ['Votação Deliberação', 'Votação na generalidade', 'Votação global', 'Votação final global']
 
-    print('parsing votes')
-    last_seen_index = account_fields.get(LAST_SEEN_INITIATIVE_COUNT, 1) - 1
-    only_vote_types = ['Votação Deliberação', 'Votação na generalidade', 'Votação global', 'Votação final global']
+        votes = parse_initiatives(initiatives, only_vote_types = only_vote_types)
 
-    new_votes = parse_initiatives(initiatives, only_vote_types = only_vote_types, from_index = last_seen_index)
+        if SKIP_ALL:
+            print('marking all votes as skipped')
+            for vote in votes:
+                state.skip_vote(vote['vote_id'])
 
-    account_fields[LAST_SEEN_INITIATIVE_COUNT] = initiatives_count(initiatives)
+        new_votes = [vote for vote in votes if state.is_new_vote(vote['vote_id'])]
 
-    print('posting votes')
-    for new_vote in new_votes:
-        print(f'posting vote {new_vote['oevId']}')
+        print('posting votes')
+        m = MastodonClient()
+        for new_vote in sorted(new_votes, key = itemgetter('date')):
+            print(f'posting vote {new_vote['vote_id']}')
 
-        m.post_vote(new_vote)
-        account_fields[LAST_POSTED_VOTE_ID_KEY] = new_vote['oevId']
-
-    print(f'updating fields: {account_fields}')
-    m.update_fields(account_fields)
+            m.post_vote(new_vote)
+            state.mark_vote_published(new_vote['vote_id'])
 
     print('done')
