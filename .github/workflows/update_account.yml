@@ -1,6 +1,9 @@
 name: Update account
 run-name: Updating account
 on:
+  schedule:
+    - cron: "0 * * * *" # Every hour
+#    - cron: "*/30 * * * *" # Every 30 minutes
   workflow_dispatch:
     inputs:
       debug_mode:

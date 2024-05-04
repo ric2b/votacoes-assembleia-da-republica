@@ -182,9 +182,9 @@ if __name__ == '__main__':
 
         new_votes = [vote for vote in votes if state.is_new_vote(vote['vote_id'])]
 
-#         if len(new_votes) > 20:
-#             print(f'Found {len(new_votes)} new votes, state might have been lost, aborting.')
-#             exit(-1)
+        if len(new_votes) > 20:
+            print(f'Found {len(new_votes)} new votes, state might have been lost, aborting.')
+            exit(-1)
 
         print('posting votes')
         m = MastodonClient()
