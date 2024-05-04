@@ -25,9 +25,11 @@ jobs:
       - run: poetry install
       - name: Fetch existing state
         continue-on-error: true
-        uses: actions/download-artifact@v4.0.0
+        uses: actions/cache/restore@v4
         with:
-          name: publish-vote-state
+          key: publish-vote-state
+          restore-keys: publish-vote-state-
+          path: state.json
       - name: Update account
         run: poetry run python3 update_account.py
         env:
@@ -35,9 +37,7 @@ jobs:
           DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
           SKIP_ALL: ${{ github.event.inputs.skip_all }}
       - name: Persist new state
-        uses: actions/upload-artifact@v4.0.0
+        uses: actions/cache/save@v4
         with:
-          name: publish-vote-state
+          key: publish-vote-state-${{ github.run_id }}
           path: state.json
-          if-no-files-found: error
-          overwrite: true
