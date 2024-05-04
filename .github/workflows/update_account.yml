@@ -23,13 +23,19 @@ jobs:
           python-version: '3.12'
           cache: 'poetry'
       - run: poetry install
+      - name: Fetch existing state
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: publish-vote-state
+          path: state.json
       - name: Update account
         run: poetry run python3 update_account.py
         env:
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
           SKIP_ALL: ${{ github.event.inputs.skip_all }}
-      - name: Archive code coverage results
+      - name: Persist new state
         uses: actions/upload-artifact@v4
         with:
           name: publish-vote-state
