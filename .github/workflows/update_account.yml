@@ -29,3 +29,10 @@ jobs:
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
           SKIP_ALL: ${{ github.event.inputs.skip_all }}
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-vote-state
+          path: state.json
+          if-no-files-found: error
+          overwrite: true
