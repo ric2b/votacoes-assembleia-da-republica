@@ -118,16 +118,16 @@ def parse_authorship(initiative) -> list[str]:
     authors = list_wrap(initiative['iniAutorGruposParlamentares']['pt_gov_ar_objectos_AutoresGruposParlamentaresOut'])
     return [author['GP'] for author in authors]
 
-def parse_initiatives(raw_initiatives, only_vote_types = ['Votação final global'], from_index = 0) -> list[dict]:
+def parse_initiatives(raw_initiatives) -> list[dict]:
     initiatives = raw_initiatives['ArrayOfPt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut']['pt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut']
 
     votes = []
-    for initiative in initiatives[from_index:]:
+    for initiative in initiatives:
         events = list_wrap(initiative['iniEventos']['pt_gov_ar_objectos_iniciativas_EventosOut'])
 
         for event in events:
             try:
-                if (event['fase'] in only_vote_types) and ('votacao' in event):
+                if 'votacao' in event:
                     raw_vote = event['votacao']['pt_gov_ar_objectos_VotacaoOut']
 
                     vote = {
@@ -171,9 +171,9 @@ if __name__ == '__main__':
         initiatives = fetch_initiatives_for_legislature('XVI')
 
         print('parsing votes')
-        only_vote_types = ['Votação Deliberação', 'Votação na generalidade', 'Votação global', 'Votação final global']
+        # {'Requerimento de adiamento de Votação (Generalidade)', 'Requerimento', 'Requerimento de adiamento de Votação', 'Requerimento dispensa do prazo previsto Artº 157 RAR', 'Votação final global', 'Requerimento avocação plenário', 'Votação na especialidade', 'Votação Deliberação', 'Votação do recurso da decisão do PAR', 'Confirmação do decreto', 'Votação na generalidade', 'Requerimento Baixa Comissão sem Votação (Generalidade)', 'Votação do parecer recurso de admissibilidade', 'Votação novo decreto'}
 
-        votes = parse_initiatives(initiatives, only_vote_types = only_vote_types)
+        votes = parse_initiatives(initiatives)
 
         if SKIP_ALL:
             print('marking all votes as skipped')
