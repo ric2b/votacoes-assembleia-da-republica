@@ -11,7 +11,7 @@ from string import Template
 load_dotenv()
 MASTODON_ACCESS_TOKEN = os.environ['MASTODON_ACCESS_TOKEN']
 DEBUG_MODE = os.environ.get('DEBUG_MODE', 'false').lower() == 'true'
-SKIP_ALL = os.environ.get('SKIP_ALL', 'false').lower() == 'true'
+MARK_ALL_AS_PUBLISHED = os.environ.get('MARK_ALL_AS_PUBLISHED', 'true').lower() == 'true'
 
 # full list https://www.parlamento.pt/Cidadania/Paginas/DAIniciativas.aspx
 JSON_URIS = {
@@ -126,44 +126,31 @@ def parse_initiatives(raw_initiatives) -> list[dict]:
         events = list_wrap(initiative['iniEventos']['pt_gov_ar_objectos_iniciativas_EventosOut'])
 
         for event in events:
-            try:
-                if 'votacao' in event:
-                    raw_vote = event['votacao']['pt_gov_ar_objectos_VotacaoOut']
+            if 'votacao' in event:
+                for raw_vote in list_wrap(event['votacao']['pt_gov_ar_objectos_VotacaoOut']):
+                    try:
+                        vote = {
+                            'vote_id': raw_vote['id'],
+                            'initiative_type': initiative['iniDescTipo'],
+                            'initiative_type_code': initiative['iniTipo'],
+                            'title': initiative['iniTitulo'],
+                            'initiative_uri': initiative['iniLinkTexto'],
+                            'authors': parse_authorship(initiative),
+                            'phase': event['fase'],
+                            'date': raw_vote['data'],
+                            'result': raw_vote['resultado'],
+                            'vote_detail': raw_vote.get('detalhe', raw_vote.get('unanime')),
+                        }
 
-                    vote = {
-                        'vote_id': event['oevId'],
-                        'initiative_type': initiative['iniDescTipo'],
-                        'initiative_type_code': initiative['iniTipo'],
-                        'title': initiative['iniTitulo'],
-                        'initiative_uri': initiative['iniLinkTexto'],
-                        'authors': parse_authorship(initiative),
-                        'phase': event['fase'],
-                        'date': raw_vote['data'],
-                        'result': raw_vote['resultado'],
-                        'vote_detail': raw_vote.get('detalhe', raw_vote.get('unanime')),
-                    }
+                        votes.append(vote)
+                    except Exception as e:
+                        import pprint
+                        print(initiative['iniNr'])
+                        pprint.pp(raw_vote)
+                        raise e
+                        exit()
 
-                    votes.append(vote)
-            except Exception as e:
-                import pprint
-                pprint.pp(initiative)
-                pprint.pp(event)
-                print(event)
-                raise e
-                exit()
     return votes
-
-def filter_new_votes(all_votes, last_posted_oevid):
-    sorted_votes = sorted(all_votes, key=itemgetter('oevId'))
-    print(list(map(lambda x: x['oevId'], sorted_votes)))
-    print(list(map(lambda x: x['data'], sorted_votes)))
-
-    try:
-        return [vote for vote in sorted_votes if vote['oevId'] > last_posted_oevid]
-    except KeyError as e:
-        import pprint
-        pprint.pp(all_votes)
-        raise e
 
 if __name__ == '__main__':
     with StateStorage() as state:
@@ -175,10 +162,12 @@ if __name__ == '__main__':
 
         votes = parse_initiatives(initiatives)
 
-        if SKIP_ALL:
-            print('marking all votes as skipped')
+        if MARK_ALL_AS_PUBLISHED:
+            print('marking all votes as published')
+            with open('state.json', 'w') as state_file:
+                        json.dump({}, state_file)
             for vote in votes:
-                state.skip_vote(vote['vote_id'])
+                state.mark_vote_published(vote['vote_id'])
 
         new_votes = [vote for vote in votes if state.is_new_vote(vote['vote_id'])]
 
