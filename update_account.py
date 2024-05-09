@@ -11,7 +11,7 @@ from string import Template
 load_dotenv()
 MASTODON_ACCESS_TOKEN = os.environ['MASTODON_ACCESS_TOKEN']
 DEBUG_MODE = os.environ.get('DEBUG_MODE', 'false').lower() == 'true'
-MARK_ALL_AS_PUBLISHED = os.environ.get('MARK_ALL_AS_PUBLISHED', 'true').lower() == 'true'
+MARK_ALL_AS_PUBLISHED = os.environ.get('MARK_ALL_AS_PUBLISHED', 'false').lower() == 'true'
 
 # full list https://www.parlamento.pt/Cidadania/Paginas/DAIniciativas.aspx
 JSON_URIS = {
@@ -164,8 +164,7 @@ if __name__ == '__main__':
 
         if MARK_ALL_AS_PUBLISHED:
             print('marking all votes as published')
-            with open('state.json', 'w') as state_file:
-                        json.dump({}, state_file)
+            state.state = {}
             for vote in votes:
                 state.mark_vote_published(vote['vote_id'])
 
