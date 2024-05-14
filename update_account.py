@@ -12,6 +12,7 @@ load_dotenv()
 MASTODON_ACCESS_TOKEN = os.environ['MASTODON_ACCESS_TOKEN']
 DEBUG_MODE = os.environ.get('DEBUG_MODE', 'false').lower() == 'true'
 MARK_ALL_AS_PUBLISHED = os.environ.get('MARK_ALL_AS_PUBLISHED', 'false').lower() == 'true'
+OVERRIDE_TOO_MANY_NEW_VOTES_CHECK = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_CHECK', 'false').lower() == 'true'
 
 # full list https://www.parlamento.pt/Cidadania/Paginas/DAIniciativas.aspx
 JSON_URIS = {
@@ -170,7 +171,7 @@ if __name__ == '__main__':
 
         new_votes = [vote for vote in votes if state.is_new_vote(vote['vote_id'])]
 
-        if len(new_votes) > 20:
+        if len(new_votes) > 30 and not OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
             print(f'Found {len(new_votes)} new votes, state might have been lost, aborting.')
             exit(-1)
 

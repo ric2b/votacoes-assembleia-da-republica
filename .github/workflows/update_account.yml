@@ -14,6 +14,10 @@ on:
         description: 'Mark all existing votes as published'
         required: false
         default: false
+      override_too_many_new_votes_check:
+        description: 'Override safety check when too many new votes are detected'
+        required: false
+        default: false
 
 jobs:
   Update-Account:
@@ -39,6 +43,7 @@ jobs:
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
           MARK_ALL_AS_PUBLISHED: ${{ github.event.inputs.mark_all_as_published }}
+          OVERRIDE_TOO_MANY_NEW_VOTES_CHECK: ${{ github.event.inputs.override_too_many_new_votes_check }}
       - name: Persist new state
         uses: actions/cache/save@v4
         with:
