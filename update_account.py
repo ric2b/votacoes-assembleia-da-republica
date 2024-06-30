@@ -171,7 +171,7 @@ if __name__ == '__main__':
 
         new_votes = [vote for vote in votes if state.is_new_vote(vote['vote_id'])]
 
-        if len(new_votes) > 30 and not OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
+        if len(new_votes) > 100 and not OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
             print(f'Found {len(new_votes)} new votes, state might have been lost, aborting.')
             exit(-1)
 
