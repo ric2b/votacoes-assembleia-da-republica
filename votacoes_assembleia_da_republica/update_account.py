@@ -3,8 +3,6 @@ from dotenv import load_dotenv
 from operator import itemgetter
 from string import Template
 
-load_dotenv()
-
 from votacoes_assembleia_da_republica.state_storage import StateStorage
 from votacoes_assembleia_da_republica.mastodon_client import MastodonClient
 from votacoes_assembleia_da_republica.fetch_votes import fetch_votes_for_legislature, parse_vote
@@ -39,10 +37,10 @@ def render_vote(vote: dict) -> str:
             initiative_uri = vote['initiative_uri'],
         )
 
-def update():
-    with StateStorage() as state:
+def update(legislature: str, state_file_path = 'state.json'):
+    with StateStorage(file_path = state_file_path) as state:
             print('fetching votes')
-            raw_votes = fetch_votes_for_legislature('XVI')
+            raw_votes = fetch_votes_for_legislature(legislature)
 
             if MARK_ALL_AS_PUBLISHED:
                 print('marking all votes as published')
@@ -52,9 +50,12 @@ def update():
 
             new_votes = [parse_vote(raw_vote) for raw_vote in raw_votes if state.is_new_vote(raw_vote['vote_id'])]
 
+            if not new_votes:
+                print('no new votes')
+                return
+
             if len(new_votes) > 100 and not OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
-                print(f'Found {len(new_votes)} new votes, state might have been lost, aborting.')
-                exit(-1)
+                raise AssertionError(f'Found {len(new_votes)} new votes, state might have been lost, aborting.')
 
             print('posting votes')
             m = MastodonClient()
@@ -66,5 +67,6 @@ def update():
                 state.mark_vote_published(vote_id)
 
 if __name__ == '__main__':
-    update()
+    load_dotenv()
+    update('XVI')
     print('done')
