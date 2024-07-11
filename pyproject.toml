@@ -9,6 +9,9 @@ beautifulsoup4 = "^4.12.3"
 lxml = "^5.2.1"
 python-dotenv = "^1.0.1"
 
+[tool.poetry.group.test.dependencies]
+pytest = "^8.2.2"
+requests-mock = "^1.12.1"
 
 [build-system]
 requires = ["poetry-core"]
