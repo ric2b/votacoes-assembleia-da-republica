@@ -3,16 +3,26 @@ from mastodon import Mastodon
 
 class MastodonClient:
     def __init__(self) -> None:
-        self.client = Mastodon(access_token=self.access_token, api_base_url=self.api_base_url)
+        if not self.debug_mode:
+            self.client = Mastodon(access_token=self.access_token, api_base_url=self.api_base_url)
 
-    def post_vote(self, rendered_vote: str, idempotency_key = None) -> str:
+    def start_vote_thread(self, rendered_thread: str, idempotency_key = None) -> dict:
+        if self.debug_mode:
+            print(f'would post thread:')
+            print(rendered_thread)
+            print('--------------------')
+            return
+
+        return self.client.status_post(rendered_thread, idempotency_key = idempotency_key, language = 'pt')
+
+    def post_vote(self, rendered_vote: str, reply_to: dict, idempotency_key = None) -> dict:
         if self.debug_mode:
             print(f'would post vote:')
             print(rendered_vote)
             print('--------------------')
             return
 
-        self.client.status_post(rendered_vote, idempotency_key = idempotency_key)
+        return self.client.status_reply(reply_to, rendered_vote, visibility = 'unlisted', idempotency_key = idempotency_key, language = 'pt')
 
     @property
     def api_base_url(self):
