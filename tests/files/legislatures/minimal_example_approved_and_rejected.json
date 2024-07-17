@@ -1,0 +1,93 @@
+{
+  "ArrayOfPt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut": {
+    "pt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut": [
+      {
+        "iniNr": "2",
+        "iniTipo": "I",
+        "iniDescTipo": "Inquérito Parlamentar",
+        "iniLeg": "XVI",
+        "iniSel": "1",
+        "dataInicioleg": "2024-03-26",
+        "iniTitulo": "Constituição de uma comissão de inquérito parlamentar ao processo de alteração da propriedade do Global Media Group envolvendo o World Opportunity Fund, Lda.",
+        "iniTextoSubst": "SIM",
+        "iniLinkTexto": "http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4d5a5763765247396a6457316c626e527663306c7561574e7059585270646d45765a4446694d546c684e3251745954686c5a6930305a4745784c54686a5a4755744e6d526a4d544d314f544268596a646a4c6d52765933673d&fich=d1b19a7d-a8ef-4da1-8cde-6dc13590ab7c.docx&Inline=true",
+        "iniEventos": {
+          "pt_gov_ar_objectos_iniciativas_EventosOut": [
+            {
+              "oevId": "1514835",
+              "dataFase": "2024-04-19",
+              "fase": "Votação Deliberação",
+              "evtId": "73",
+              "codigoFase": "335",
+              "votacao": {
+                "pt_gov_ar_objectos_VotacaoOut": {
+                  "id": "126496",
+                  "resultado": "Rejeitado",
+                  "reuniao": "8",
+                  "tipoReuniao": "RP",
+                  "detalhe": "A Favor: <I>IL</I>, <I> BE</I>, <I> PCP</I>, <I> L</I>, <I> PAN</I><BR>Contra:<I>PSD</I>, <I> PS</I>, <I> CDS-PP</I><BR>Abstenção:<I>CH</I>",
+                  "data": "2024-04-19"
+                }
+              }
+            }
+          ]
+        },
+        "iniAutorOutros": {
+          "sigla": "G",
+          "nome": "Grupos Parlamentares"
+        },
+        "iniId": "263542",
+        "iniAutorGruposParlamentares": {
+          "pt_gov_ar_objectos_AutoresGruposParlamentaresOut": {
+            "GP": "PAN"
+          }
+        },
+        "iniTextoSubstCampo": "Substituição do texto da iniciativa a pedido do autor em 2024-04-05."
+      },
+      {
+        "iniNr": "70",
+        "iniTipo": "J",
+        "iniDescTipo": "Projeto de Lei",
+        "iniLeg": "XVI",
+        "iniSel": "1",
+        "dataInicioleg": "2024-03-26",
+        "iniTitulo": "Altera o Código do Imposto sobre o Rendimento das Pessoas Singulares",
+        "iniTextoSubst": "NAO",
+        "iniLinkTexto": "http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4d5a5763765247396a6457316c626e527663306c7561574e7059585270646d45764d545a6a4f575a6b5a6a6b744e4751334e4330304d6d49344c574a6b5a6a49744d6d566b5957497a4d475a6b4d6d45784c6d52765933673d&fich=16c9fdf9-4d74-42b8-bdf2-2edab30fd2a1.docx&Inline=true",
+        "iniAnexos": {
+          "pt_gov_ar_objectos_iniciativas_AnexosOut": {
+            "anexoNome": "A.I.G.",
+            "anexoFich": "http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4d5a5763765247396a6457316c626e527663306c7561574e7059585270646d4576593259354e44526a4e5759744e44457859793030596a55774c5749344d5451744d6a49794d6a6b794d3251794d44686c4c6e426b5a673d3d&fich=cf944c5f-411c-4b50-b814-2222923d208e.pdf&Inline=true"
+          }
+        },
+        "iniEventos": {
+          "pt_gov_ar_objectos_iniciativas_EventosOut": [
+            {
+              "oevId": "1515058",
+              "dataFase": "2024-04-24",
+              "fase": "Votação na generalidade",
+              "evtId": "13",
+              "codigoFase": "250",
+              "votacao": {
+                "pt_gov_ar_objectos_VotacaoOut": {
+                  "id": "126516",
+                  "resultado": "Aprovado",
+                  "reuniao": "10",
+                  "tipoReuniao": "RP",
+                  "detalhe": "A Favor: <I>PS</I>, <I> BE</I>, <I> PCP</I>, <I> L</I>, <I> PAN</I><BR>Contra:<I>PSD</I>, <I> CDS-PP</I><BR>Abstenção:<I>CH</I>, <I> IL</I>",
+                  "data": "2024-04-24"
+                }
+              }
+            }
+          ]
+        },
+        "iniId": "263610",
+        "iniAutorGruposParlamentares": {
+          "pt_gov_ar_objectos_AutoresGruposParlamentaresOut": {
+            "GP": "PS"
+          }
+        }
+      }
+    ]
+  }
+}
