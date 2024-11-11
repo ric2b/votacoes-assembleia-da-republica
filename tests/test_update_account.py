@@ -5,7 +5,7 @@ import requests_mock
 from textwrap import dedent
 from urllib.parse import unquote_plus
 
-from votacoes_assembleia_da_republica.update_account import update
+from votacoes_assembleia_da_republica.update_account import update, StateStorage
 from votacoes_assembleia_da_republica.fetch_votes import JSON_URIS
 
 @pytest.fixture(autouse=True)
@@ -20,6 +20,35 @@ def test_update_doesnt_crash_if_there_are_no_votes(requests_mock, tmp_path):
 
     assert requests_mock.called
     assert requests_mock.call_count == 1
+
+def test_render_vote_cuts_down_text_down_to_the_500_char_limit():
+    pass
+
+def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tmp_path):
+    with open('tests/files/legislatures/minimal_example_approved_and_rejected.json', 'r') as legislature:
+        requests_mock.get(JSON_URIS['XVI'], text=legislature.read())
+
+    account = { 'id': 1, 'acct': 'user@server.com' }
+
+    requests_mock.get('https://masto.pt/api/v1/instance', status_code = 200)
+    requests_mock.get('https://masto.pt/api/v1/accounts/verify_credentials', status_code = 200, json = account)
+    requests_mock.post('https://masto.pt/api/v1/statuses', [
+        {'json': { 'id': 1, 'account': account, 'mentions': []}},
+        {'status_code': 422, 'text': 'Validation failed: Text limite de caracter excedeu 500'},
+        {'json': { 'id': 2, 'account': account, 'mentions': []}},
+        {'json': { 'id': 126516, 'account': account, 'mentions': []}},
+    ])
+
+    state_file_path = tmp_path / 'state.json'
+    update('XVI', state_file_path)
+
+    assert requests_mock.called
+    assert all(request.hostname in ['app.parlamento.pt', 'masto.pt'] for request in requests_mock.request_history)
+    assert requests_mock.call_count == 7
+
+    with StateStorage(file_path = state_file_path) as state:
+        assert state.get_vote_state('126496') == 'published'
+        assert state.get_vote_state('126516') == 'errored'
 
 def test_update_makes_no_mastodon_requests_when_debug_mode_is_enabled(requests_mock, tmp_path, monkeypatch):
     monkeypatch.setenv('DEBUG_MODE', 'true')

@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from operator import itemgetter
 from string import Template
+from mastodon import MastodonError
 
 from votacoes_assembleia_da_republica.state_storage import StateStorage
 from votacoes_assembleia_da_republica.mastodon_client import MastodonClient
@@ -97,8 +98,12 @@ def update(legislature: str, state_file_path = 'state.json'):
                     vote_id = new_vote_for_result['vote_id']
 
                     print(f'posting vote {new_vote_for_result}')
-                    m.post_vote(render_vote(new_vote_for_result), reply_to = result_thread, idempotency_key = vote_id)
-                    state.mark_vote_published(vote_id)
+                    try:
+                        m.post_vote(render_vote(new_vote_for_result), reply_to = result_thread, idempotency_key = vote_id)
+                        state.mark_vote_published(vote_id)
+                    except MastodonError as e:
+                        print(f'error posting vote {vote_id}: {e}')
+                        state.mark_vote_errored(vote_id)
 
 if __name__ == '__main__':
     load_dotenv()
