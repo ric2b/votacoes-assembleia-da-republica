@@ -50,38 +50,40 @@ def list_wrap(raw) -> list:
     return raw if isinstance(raw, list) else [raw]
 
 def parse_authorship(initiative) -> list[str]:
-    if not initiative['IniAutorGruposParlamentares']:
+    if 'iniAutorGruposParlamentares' not in initiative:
         return ['Outro']
 
-    authors = list_wrap(initiative['IniAutorGruposParlamentares'])
+    authors = list_wrap(initiative['iniAutorGruposParlamentares']['pt_gov_ar_objectos_AutoresGruposParlamentaresOut'])
     return [author['GP'] for author in authors]
 
 def parse_initiatives(raw_initiatives) -> list[dict]:
+    initiatives = raw_initiatives['ArrayOfPt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut']['pt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut']
+
     votes = []
-    for initiative in raw_initiatives:
-        events = list_wrap(initiative['IniEventos'])
+    for initiative in initiatives:
+        events = list_wrap(initiative['iniEventos']['pt_gov_ar_objectos_iniciativas_EventosOut'])
 
         for event in events:
-            if event['Votacao']:
-                for raw_vote in list_wrap(event['Votacao']):
+            if 'votacao' in event:
+                for raw_vote in list_wrap(event['votacao']['pt_gov_ar_objectos_VotacaoOut']):
                     try:
                         vote = {
                             'vote_id': raw_vote['id'],
-                            'initiative_type': initiative['IniDescTipo'],
-                            'initiative_type_code': initiative['IniTipo'],
-                            'title': initiative['IniTitulo'],
-                            'initiative_uri': initiative['IniLinkTexto'],
+                            'initiative_type': initiative['iniDescTipo'],
+                            'initiative_type_code': initiative['iniTipo'],
+                            'title': initiative['iniTitulo'],
+                            'initiative_uri': initiative['iniLinkTexto'],
                             'authors': parse_authorship(initiative),
-                            'phase': event['Fase'],
+                            'phase': event['fase'],
                             'date': raw_vote['data'],
                             'result': raw_vote['resultado'],
-                            'vote_detail': raw_vote['detalhe'] or raw_vote.get('unanime'),
+                            'vote_detail': raw_vote.get('detalhe', raw_vote.get('unanime')),
                         }
 
                         votes.append(vote)
                     except Exception as e:
                         import pprint
-                        print(initiative['IniNr'])
+                        print(initiative['iniNr'])
                         pprint.pp(raw_vote)
                         raise e
                         exit()
