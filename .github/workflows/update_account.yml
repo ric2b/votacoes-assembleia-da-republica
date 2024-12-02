@@ -48,12 +48,12 @@ jobs:
           OVERRIDE_TOO_MANY_NEW_VOTES_CHECK: ${{ github.event.inputs.override_too_many_new_votes_check }}
           OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE: ${{ github.event.inputs.override_too_many_new_votes_allow_after_iso_date }}
       - name: Persist state
-        uses: actions/upload-artifact@v4.0.0
+        uses: actions/upload-artifact@v4
         with:
           name: publish-vote-state-latest
           path: state.json
       - name: Archive new state
-        uses: actions/upload-artifact@v4.0.0
+        uses: actions/upload-artifact@v4
         with:
           name: publish-vote-state-${{ github.run_id }}
           path: state.json

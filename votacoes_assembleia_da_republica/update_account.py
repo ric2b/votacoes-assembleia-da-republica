@@ -11,6 +11,7 @@ from votacoes_assembleia_da_republica.fetch_votes import fetch_votes_for_legisla
 if __name__ == '__main__':
     load_dotenv()
 
+DEBUG_MODE = os.getenv('DEBUG_MODE', 'false').lower() == 'true'
 MARK_ALL_AS_PUBLISHED = os.environ.get('MARK_ALL_AS_PUBLISHED', 'false').lower() == 'true'
 OVERRIDE_TOO_MANY_NEW_VOTES_CHECK = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_CHECK', 'false').lower() == 'true'
 OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE', datetime.date.today().isoformat())
@@ -130,10 +131,12 @@ def update(legislature: str, state_file_path = 'state.json'):
                     print(f'posting vote {new_vote_for_result}')
                     try:
                         m.post_vote(render_vote(new_vote_for_result), reply_to = result_thread, idempotency_key = vote_id)
-                        state.mark_vote_published(vote_id)
+                        if not DEBUG_MODE:
+                            state.mark_vote_published(vote_id)
                     except MastodonError as e:
                         print(f'error posting vote {vote_id}: {e}')
-                        state.mark_vote_errored(vote_id)
+                        if not DEBUG_MODE:
+                            state.mark_vote_errored(vote_id)
 
 if __name__ == '__main__':
     update('XVI')
