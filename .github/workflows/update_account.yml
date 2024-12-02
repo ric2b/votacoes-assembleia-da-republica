@@ -18,6 +18,10 @@ on:
         description: 'Override safety check when too many new votes are detected'
         required: false
         default: false
+      override_too_many_new_votes_allow_after_iso_date:
+        description: 'ISO date after which new votes will be allowed if too many are detected'
+        required: false
+        default: '9999-12-31'
 
 jobs:
   Update-Account:
@@ -30,12 +34,10 @@ jobs:
           python-version: '3.12'
           cache: 'poetry'
       - run: poetry install
-      - name: Fetch existing state
-        continue-on-error: true
-        uses: actions/cache/restore@v4
+      - name: Download state
+        uses: actions/download-artifact@v4
         with:
-          key: publish-vote-state
-          restore-keys: publish-vote-state-
+          name: publish-vote-state-11338422268 # TODO: rename to -latest after fixing current issue with the state
           path: state.json
       - name: Update account
         run: poetry run python3 -m votacoes_assembleia_da_republica.update_account
@@ -44,10 +46,11 @@ jobs:
           DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
           MARK_ALL_AS_PUBLISHED: ${{ github.event.inputs.mark_all_as_published }}
           OVERRIDE_TOO_MANY_NEW_VOTES_CHECK: ${{ github.event.inputs.override_too_many_new_votes_check }}
-      - name: Persist new state
-        uses: actions/cache/save@v4
+          OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE: ${{ github.event.inputs.override_too_many_new_votes_allow_after_iso_date }}
+      - name: Persist state
+        uses: actions/upload-artifact@v4.0.0
         with:
-          key: publish-vote-state-${{ github.run_id }}
+          name: publish-vote-state-latest
           path: state.json
       - name: Archive new state
         uses: actions/upload-artifact@v4.0.0
