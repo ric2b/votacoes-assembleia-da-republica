@@ -31,9 +31,10 @@ jobs:
           cache: 'poetry'
       - run: poetry install
       - name: Download state
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
-          name: publish-vote-state-11338422268 # TODO: rename to -latest after fixing current issue with the state
+          name: publish-vote-state-latest
           path: state.json
       - name: Update account
         run: poetry run python3 -m votacoes_assembleia_da_republica.update_account
