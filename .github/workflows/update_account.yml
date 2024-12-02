@@ -30,11 +30,12 @@ jobs:
           python-version: '3.12'
           cache: 'poetry'
       - run: poetry install
-      - name: Download state
+      - name: Fetch existing state
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/cache/restore@v4
         with:
-          name: publish-vote-state-latest
+          key: publish-vote-state
+          restore-keys: publish-vote-state-
           path: state.json
       - name: Update account
         run: poetry run python3 -m votacoes_assembleia_da_republica.update_account
@@ -43,10 +44,10 @@ jobs:
           DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
           OVERRIDE_TOO_MANY_NEW_VOTES_CHECK: ${{ github.event.inputs.override_too_many_new_votes_check }}
           OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE: ${{ github.event.inputs.override_too_many_new_votes_allow_after_iso_date }}
-      - name: Persist state
-        uses: actions/upload-artifact@v4
+      - name: Persist new state
+        uses: actions/cache/save@v4
         with:
-          name: publish-vote-state-latest
+          key: publish-vote-state-${{ github.run_id }}
           path: state.json
       - name: Archive new state
         uses: actions/upload-artifact@v4
