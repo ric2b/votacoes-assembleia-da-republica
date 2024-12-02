@@ -3,8 +3,7 @@ from bs4 import BeautifulSoup
 
 # full list https://www.parlamento.pt/Cidadania/Paginas/DAIniciativas.aspx
 JSON_URIS = {
-    'XVI': 'https://app.parlamento.pt/webutils/docs/doc.txt?path=JIf%2bfNEFTJ3dZjfk2SEgv7akbMN1hBC%2fl88Tim%2bRTzTnLS1tvsCi0B3Lm2ReYXUcazUcPcGvstFujlwAWizrbpdrEV%2fH%2fhIj%2boq49E1lcuhsGcEdXynUiqGK6wHUnTe3CehLsOI3aZj0hvjakE7sD8eDicdNpIuy5Xzd9e2yo6VnmuBjuq1jgLxTZCcBGK3KUc0taNvXf%2b816sIPNUK0K9QJiPgf%2bpXBOM3lZWBKTPlgPciZYyfHaRnuBzll7aLI57H6ADfms%2ffbK3HQlwRzhej64OLMKN8SG%2bJ89HZLGHfdzFBMupBH0czdzcua0A9jgWPVtIhoSbjW5Np5dsPusDHBaW2Zhg2W2rSsbQp9kPA%3d&fich=IniciativasXVI_json.txt&Inline=true',
-    'XV': 'https://app.parlamento.pt/webutils/docs/doc.txt?path=9pmNwL6GoXv7I7%2b%2fqIbTfPny7HRpBWiyHiyClKcla8C2sa9EbIgDyIZa9rTsuI6jG3KgMosUtvKl%2fek7BtzUee6kPEU6gITunDOdPb0T7gMnfM5%2bUWWRn6r2t42DSM63%2fJ8az36bpRSJRpyggVhCBBQaOYNMwQPVFMNSkpSUQL2zczuCdhZgMg55hQZ%2fYBmuFwowZHRTHoSMFhd7ILx58tsqdWEWAdDti73T55KxYGPH6u80%2bQVLC9wvYuYm433%2bksaSYCLQ3J%2fUA5OZBrd4ixlscy1B%2b05uflW2PMAzAB8jsVMIoGk97YMNCzkxHccRMsmN2Ge2h6jIbN8uYcpbzRUUR0ImHSj1NHlc4Hq%2bcVc%3d&fich=IniciativasXV_json.txt&Inline=true',
+    'XVI': 'https://app.parlamento.pt/webutils/docs/doc.txt?path=p%2bSA2AT%2fyt2iwr8bwKM9dJ8sza2EknnElLNpyhYHRVrtIPiG5z0I6gGOdIl1oXFhqjoubuAuET0Zgm9uEI4rI%2bNvpyKFqmN1my4x3fv98P%2bj5Mn%2bSR76ofKRj0vdiGGF8qfzfW5sKgM3%2fpbycpdVyQ%2ffPzSQ5%2fK%2bn7I1Zf60qUGKlUd34Semm%2fxaK2vteEQ2ZMeST6X%2fRTMsO3siuJxiN%2br3nOg8sWY8ig7BgP8nH5hMwOzDV4nmuQ3kDAwNX1WOqq6x0dKkRRBtWrWasxookYPf9GstdSROcBA%2bIijpMtmhJ8ncoQQxBMUMCM512sL0kJ6Jtl4V0tMnVv4NkiHAzkSH1TKcASxH%2b%2b4pdV8aFiMATzcTV5RT%2fCK4UfYyM%2bYn&fich=IniciativasXVI_json.txt&Inline=true',
 }
 
 def fetch_votes_for_legislature(legislature):
@@ -51,40 +50,38 @@ def list_wrap(raw) -> list:
     return raw if isinstance(raw, list) else [raw]
 
 def parse_authorship(initiative) -> list[str]:
-    if 'iniAutorGruposParlamentares' not in initiative:
+    if not initiative['IniAutorGruposParlamentares']:
         return ['Outro']
 
-    authors = list_wrap(initiative['iniAutorGruposParlamentares']['pt_gov_ar_objectos_AutoresGruposParlamentaresOut'])
+    authors = list_wrap(initiative['IniAutorGruposParlamentares'])
     return [author['GP'] for author in authors]
 
 def parse_initiatives(raw_initiatives) -> list[dict]:
-    initiatives = raw_initiatives['ArrayOfPt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut']['pt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut']
-
     votes = []
-    for initiative in initiatives:
-        events = list_wrap(initiative['iniEventos']['pt_gov_ar_objectos_iniciativas_EventosOut'])
+    for initiative in raw_initiatives:
+        events = list_wrap(initiative['IniEventos'])
 
         for event in events:
-            if 'votacao' in event:
-                for raw_vote in list_wrap(event['votacao']['pt_gov_ar_objectos_VotacaoOut']):
+            if event['Votacao']:
+                for raw_vote in list_wrap(event['Votacao']):
                     try:
                         vote = {
                             'vote_id': raw_vote['id'],
-                            'initiative_type': initiative['iniDescTipo'],
-                            'initiative_type_code': initiative['iniTipo'],
-                            'title': initiative['iniTitulo'],
-                            'initiative_uri': initiative['iniLinkTexto'],
+                            'initiative_type': initiative['IniDescTipo'],
+                            'initiative_type_code': initiative['IniTipo'],
+                            'title': initiative['IniTitulo'],
+                            'initiative_uri': initiative['IniLinkTexto'],
                             'authors': parse_authorship(initiative),
-                            'phase': event['fase'],
+                            'phase': event['Fase'],
                             'date': raw_vote['data'],
                             'result': raw_vote['resultado'],
-                            'vote_detail': raw_vote.get('detalhe', raw_vote.get('unanime')),
+                            'vote_detail': raw_vote['detalhe'] or raw_vote.get('unanime'),
                         }
 
                         votes.append(vote)
                     except Exception as e:
                         import pprint
-                        print(initiative['iniNr'])
+                        print(initiative['IniNr'])
                         pprint.pp(raw_vote)
                         raise e
                         exit()

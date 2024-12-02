@@ -2,13 +2,19 @@ import os
 from dotenv import load_dotenv
 from operator import itemgetter
 from string import Template
+from mastodon import MastodonError
 
 from votacoes_assembleia_da_republica.state_storage import StateStorage
 from votacoes_assembleia_da_republica.mastodon_client import MastodonClient
 from votacoes_assembleia_da_republica.fetch_votes import fetch_votes_for_legislature, parse_vote
 
+if __name__ == '__main__':
+    load_dotenv()
+
 MARK_ALL_AS_PUBLISHED = os.environ.get('MARK_ALL_AS_PUBLISHED', 'false').lower() == 'true'
 OVERRIDE_TOO_MANY_NEW_VOTES_CHECK = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_CHECK', 'false').lower() == 'true'
+
+TOOT_MAX_LENGTH = 500
 
 def render_thread(result: str, sorted_new_votes: list[dict]) -> str:
     date_start = sorted_new_votes[0]['date']
@@ -39,12 +45,32 @@ def render_vote(vote: dict) -> str:
                     abstained = ', '.join(vote_detail['abstained'] + vote_detail['absent']),
                 )
 
-        return toot_template.substitute(
+        rendered = toot_template.substitute(
             result = '🟢 Aprovado' if vote['result'] == 'Aprovado' else '🔴 Rejeitado',
             date = vote['date'],
             type = vote['initiative_type'],
             authors = ', '.join(vote['authors']),
             title = vote['title'],
+            phase = vote['phase'],
+            vote_detail = rendered_vote_detail,
+            initiative_uri = vote['initiative_uri'],
+        )
+
+        # Mastodon counts urls as 23 characters maximum
+        rendered_length = len(rendered) - len(vote['initiative_uri']) + min(len(vote['initiative_uri']), 23)
+
+        if rendered_length <= TOOT_MAX_LENGTH:
+            return rendered
+
+        rest_of_text = rendered_length - len(vote['title'])
+        title_max_length = TOOT_MAX_LENGTH - rest_of_text - 3
+
+        return toot_template.substitute(
+            result = '🟢 Aprovado' if vote['result'] == 'Aprovado' else '🔴 Rejeitado',
+            date = vote['date'],
+            type = vote['initiative_type'],
+            authors = ', '.join(vote['authors']),
+            title = f"{vote['title'][:title_max_length]}...",
             phase = vote['phase'],
             vote_detail = rendered_vote_detail,
             initiative_uri = vote['initiative_uri'],
@@ -97,10 +123,13 @@ def update(legislature: str, state_file_path = 'state.json'):
                     vote_id = new_vote_for_result['vote_id']
 
                     print(f'posting vote {new_vote_for_result}')
-                    m.post_vote(render_vote(new_vote_for_result), reply_to = result_thread, idempotency_key = vote_id)
-                    state.mark_vote_published(vote_id)
+                    try:
+                        m.post_vote(render_vote(new_vote_for_result), reply_to = result_thread, idempotency_key = vote_id)
+                        state.mark_vote_published(vote_id)
+                    except MastodonError as e:
+                        print(f'error posting vote {vote_id}: {e}')
+                        state.mark_vote_errored(vote_id)
 
 if __name__ == '__main__':
-    load_dotenv()
     update('XVI')
     print('done')

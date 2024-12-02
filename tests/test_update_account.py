@@ -5,7 +5,7 @@ import requests_mock
 from textwrap import dedent
 from urllib.parse import unquote_plus
 
-from votacoes_assembleia_da_republica.update_account import update
+from votacoes_assembleia_da_republica.update_account import update, render_vote, StateStorage
 from votacoes_assembleia_da_republica.fetch_votes import JSON_URIS
 
 @pytest.fixture(autouse=True)
@@ -20,6 +20,47 @@ def test_update_doesnt_crash_if_there_are_no_votes(requests_mock, tmp_path):
 
     assert requests_mock.called
     assert requests_mock.call_count == 1
+
+def test_render_vote_cuts_down_text_down_to_the_500_char_limit():
+    test_vote = {
+            'vote_id': '12345',
+            'result': 'Rejeitado',
+            'vote_detail': 'unanime',
+            'date': '2024-04-10',
+            'authors': ['author 1', 'author 2'],
+            'initiative_type': 'Projeto de Lei',
+            'title': 1000 * 'A',
+            'phase': 'Entrada',
+            'initiative_uri': 'http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4d5a5763765247396a6457316c626e527663306c7561574e7059585270646d4576597a466b5a6d453459544d744d475a685a5330304d32557a4c5749325a6d4d744e6a6b78596a55794d5449304f47517a4c6d52765933673d&fich=c1dfa8a3-0fae-43e3-b6fc-691b521248d3.docx&Inline=true',
+    }
+
+    assert len(render_vote(test_vote)) - len(test_vote['initiative_uri']) + 23 == 500
+
+def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tmp_path):
+    with open('tests/files/legislatures/minimal_example_approved_and_rejected.json', 'r') as legislature:
+        requests_mock.get(JSON_URIS['XVI'], text=legislature.read())
+
+    account = { 'id': 1, 'acct': 'user@server.com' }
+
+    requests_mock.get('https://masto.pt/api/v1/instance', status_code = 200)
+    requests_mock.get('https://masto.pt/api/v1/accounts/verify_credentials', status_code = 200, json = account)
+    requests_mock.post('https://masto.pt/api/v1/statuses', [
+        {'json': { 'id': 1, 'account': account, 'mentions': []}},
+        {'status_code': 422, 'text': 'Validation failed: Text limite de caracter excedeu 500'},
+        {'json': { 'id': 2, 'account': account, 'mentions': []}},
+        {'json': { 'id': 126516, 'account': account, 'mentions': []}},
+    ])
+
+    state_file_path = tmp_path / 'state.json'
+    update('XVI', state_file_path)
+
+    assert requests_mock.called
+    assert all(request.hostname in ['app.parlamento.pt', 'masto.pt'] for request in requests_mock.request_history)
+    assert requests_mock.call_count == 7
+
+    with StateStorage(file_path = state_file_path) as state:
+        assert state.get_vote_state('126496') == 'published'
+        assert state.get_vote_state('126516') == 'errored'
 
 def test_update_makes_no_mastodon_requests_when_debug_mode_is_enabled(requests_mock, tmp_path, monkeypatch):
     monkeypatch.setenv('DEBUG_MODE', 'true')

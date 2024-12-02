@@ -20,9 +20,15 @@ class StateStorage:
     def mark_vote_published(self, vote_id: str) -> None:
         self.state[vote_id] = 'published'
 
+    def mark_vote_errored(self, vote_id: str) -> None:
+        self.state[vote_id] = 'errored'
+
     def skip_vote(self, vote_id: str) -> None:
         if vote_id not in self.state:
             self.state[vote_id] = 'skipped'
 
     def is_new_vote(self, vote_id: str) -> bool:
         return vote_id not in self.state
+
+    def get_vote_state(self, vote_id: str) -> str:
+        return self.state[vote_id]
