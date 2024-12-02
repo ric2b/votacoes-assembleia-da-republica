@@ -12,7 +12,6 @@ if __name__ == '__main__':
     load_dotenv()
 
 DEBUG_MODE = os.getenv('DEBUG_MODE', 'false').lower() == 'true'
-MARK_ALL_AS_PUBLISHED = os.environ.get('MARK_ALL_AS_PUBLISHED', 'false').lower() == 'true'
 OVERRIDE_TOO_MANY_NEW_VOTES_CHECK = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_CHECK', 'false').lower() == 'true'
 OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE', datetime.date.today().isoformat())
 
@@ -92,12 +91,6 @@ def update(legislature: str, state_file_path = 'state.json'):
     with StateStorage(file_path = state_file_path) as state:
             print('fetching votes')
             raw_votes = fetch_votes_for_legislature(legislature)
-
-            if MARK_ALL_AS_PUBLISHED:
-                print('marking all votes as published')
-                state.state = {}
-                for raw_vote in raw_votes:
-                    state.mark_vote_published(raw_vote['vote_id'])
 
             new_votes = [parse_vote(raw_vote) for raw_vote in raw_votes if state.is_new_vote(raw_vote['vote_id'])]
 

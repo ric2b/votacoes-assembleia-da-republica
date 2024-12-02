@@ -7,11 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       debug_mode:
-        description: 'Print votes to stdout instead of posting'
-        required: false
-        default: false
-      mark_all_as_published:
-        description: 'Mark all existing votes as published'
+        description: 'Print votes to stdout instead of posting and keep current state'
         required: false
         default: false
       override_too_many_new_votes_check:
@@ -44,7 +40,6 @@ jobs:
         env:
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
-          MARK_ALL_AS_PUBLISHED: ${{ github.event.inputs.mark_all_as_published }}
           OVERRIDE_TOO_MANY_NEW_VOTES_CHECK: ${{ github.event.inputs.override_too_many_new_votes_check }}
           OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE: ${{ github.event.inputs.override_too_many_new_votes_allow_after_iso_date }}
       - name: Persist state
