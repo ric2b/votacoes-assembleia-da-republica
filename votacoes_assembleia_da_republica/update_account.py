@@ -13,6 +13,7 @@ if __name__ == '__main__':
 
 MARK_ALL_AS_PUBLISHED = os.environ.get('MARK_ALL_AS_PUBLISHED', 'false').lower() == 'true'
 OVERRIDE_TOO_MANY_NEW_VOTES_CHECK = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_CHECK', 'false').lower() == 'true'
+OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE', datetime.date.today().isoformat())
 
 TOOT_MAX_LENGTH = 500
 
@@ -105,6 +106,10 @@ def update(legislature: str, state_file_path = 'state.json'):
 
             if len(new_votes) > 100 and not OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
                 raise AssertionError(f'Found {len(new_votes)} new votes, state might have been lost, aborting.')
+
+            if len(new_votes) > 100 and OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
+                print(f'Found {len(new_votes)} new votes, overriding check and allowing the ones after: {OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE}')
+                new_votes = [vote for vote in new_votes if datetime.date.fromisoformat(vote['date']) > OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE]
 
             print('posting votes')
             m = MastodonClient()
