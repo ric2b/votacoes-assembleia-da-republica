@@ -105,6 +105,8 @@ def update(legislature: str, state_file_path = 'state.json'):
             if len(new_votes) > 100 and OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
                 print(f'Found {len(new_votes)} new votes, overriding check and allowing the ones after: {OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE}')
                 new_votes = [vote for vote in new_votes if vote['date'] > OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE]
+                if not DEBUG_MODE:
+                    [state.skip_vote(expired_vote['vote_id']) for expired_vote in new_votes if expired_vote['date'] <= OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE]
 
             print('posting votes')
             m = MastodonClient()
