@@ -12,6 +12,13 @@ from votacoes_assembleia_da_republica.fetch_votes import JSON_URIS
 def disable_debug_mode(monkeypatch):
     monkeypatch.setenv('DEBUG_MODE', 'false')
 
+@pytest.fixture(autouse=True)
+def stub_gh_data(monkeypatch, requests_mock):
+    monkeypatch.setenv('GH_VARIABLE_UPDATE_TOKEN', 'gh_token')
+    monkeypatch.setenv('REPO_OWNER', 'owner')
+    monkeypatch.setenv('REPO_PATH', 'owner/repo')
+    requests_mock.patch(StateStorage('XVI').gh_variable_url, status_code=200, text='{}')
+
 def test_update_doesnt_crash_if_there_are_no_votes(requests_mock, tmp_path):
     with open('tests/files/legislatures/empty_example.json', 'r') as legislature:
         requests_mock.get(JSON_URIS['XVI'], text=legislature.read())
@@ -58,7 +65,7 @@ def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tm
     assert all(request.hostname in ['app.parlamento.pt', 'masto.pt'] for request in requests_mock.request_history)
     assert requests_mock.call_count == 7
 
-    with StateStorage(file_path = state_file_path) as state:
+    with StateStorage(legislature = 'XVI', file_path = state_file_path) as state:
         assert state.get_vote_state('126496') == 'published'
         assert state.get_vote_state('126516') == 'errored'
 

@@ -89,7 +89,7 @@ def group_votes_by_result(votes: list[dict]) -> dict[str, list[dict]]:
     return votes_by_result
 
 def update(legislature: str, state_file_path = 'state.json'):
-    with StateStorage(file_path = state_file_path) as state:
+    with StateStorage(legislature, file_path = state_file_path) as state:
             print('fetching votes')
             raw_votes = fetch_votes_for_legislature(legislature)
 
@@ -104,9 +104,8 @@ def update(legislature: str, state_file_path = 'state.json'):
 
             if len(new_votes) > 100 and OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
                 print(f'Found {len(new_votes)} new votes, overriding check and allowing the ones after: {OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE}')
+                [state.skip_vote(expired_vote['vote_id']) for expired_vote in new_votes if expired_vote['date'] <= OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE]
                 new_votes = [vote for vote in new_votes if vote['date'] > OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE]
-                if not DEBUG_MODE:
-                    [state.skip_vote(expired_vote['vote_id']) for expired_vote in new_votes if expired_vote['date'] <= OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE]
 
             print('posting votes')
             m = MastodonClient()
@@ -127,12 +126,10 @@ def update(legislature: str, state_file_path = 'state.json'):
                     print(f'posting vote {new_vote_for_result}')
                     try:
                         m.post_vote(render_vote(new_vote_for_result), reply_to = result_thread, idempotency_key = vote_id)
-                        if not DEBUG_MODE:
-                            state.mark_vote_published(vote_id)
+                        state.mark_vote_published(vote_id)
                     except MastodonError as e:
                         print(f'error posting vote {vote_id}: {e}')
-                        if not DEBUG_MODE:
-                            state.mark_vote_errored(vote_id)
+                        state.mark_vote_errored(vote_id)
 
 if __name__ == '__main__':
     update('XVI')

@@ -40,6 +40,10 @@ jobs:
       - name: Update account
         run: poetry run python3 -m votacoes_assembleia_da_republica.update_account
         env:
+          GH_VARIABLE_UPDATE_TOKEN: ${{ secrets.GH_VARIABLE_UPDATE_TOKEN }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_PATH: ${{ github.repository }}
+
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
           OVERRIDE_TOO_MANY_NEW_VOTES_CHECK: ${{ github.event.inputs.override_too_many_new_votes_check }}
