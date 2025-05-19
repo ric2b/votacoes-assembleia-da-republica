@@ -117,7 +117,7 @@ def update(legislature: str, state_file_path = 'state.json'):
                 print(f'starting a thread for result {result}')
                 new_votes_for_result.sort(key = itemgetter('date'))
 
-                idempotency_key = str(hash(vote for vote in new_votes))
+                idempotency_key = str(hash(vote for vote in new_votes_for_result))
                 result_thread = m.start_vote_thread(render_thread(result, new_votes_for_result), idempotency_key = idempotency_key)
 
                 for new_vote_for_result in new_votes_for_result:
