@@ -44,7 +44,7 @@ class StateStorage:
         headers = { "Accept": "application/vnd.github.v3+json", "Authorization": f"token {self.gh_token}" }
 
         try:
-            response = requests.patch(url, headers=headers, json=state)
+            response = requests.patch(url, headers=headers, json={ "value": state })
 
             if response.status_code not in (201, 204):
                 print(f"Error updating variable: {response.status_code} - {response.text}", file=sys.stderr)
