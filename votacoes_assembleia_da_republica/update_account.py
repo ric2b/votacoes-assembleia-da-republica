@@ -102,7 +102,7 @@ def update(legislature: str, state_file_path = 'state.json'):
             if len(new_votes) > 100 and not OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
                 raise AssertionError(f'Found {len(new_votes)} new votes, state might have been lost, aborting.')
 
-            if len(new_votes) > 100 and OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
+            if OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
                 print(f'Found {len(new_votes)} new votes, overriding check and allowing the ones after: {OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE}')
                 [state.skip_vote(expired_vote['vote_id']) for expired_vote in new_votes if expired_vote['date'] <= OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE]
                 new_votes = [vote for vote in new_votes if vote['date'] > OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE]
@@ -132,5 +132,5 @@ def update(legislature: str, state_file_path = 'state.json'):
                         state.mark_vote_errored(vote_id)
 
 if __name__ == '__main__':
-    update('XVI')
+    update('XVII')
     print('done')

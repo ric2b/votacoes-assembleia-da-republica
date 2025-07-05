@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 # full list https://www.parlamento.pt/Cidadania/Paginas/DAIniciativas.aspx
 JSON_URIS = {
     'XVI': 'https://app.parlamento.pt/webutils/docs/doc.txt?path=p%2bSA2AT%2fyt2iwr8bwKM9dJ8sza2EknnElLNpyhYHRVrtIPiG5z0I6gGOdIl1oXFhqjoubuAuET0Zgm9uEI4rI%2bNvpyKFqmN1my4x3fv98P%2bj5Mn%2bSR76ofKRj0vdiGGF8qfzfW5sKgM3%2fpbycpdVyQ%2ffPzSQ5%2fK%2bn7I1Zf60qUGKlUd34Semm%2fxaK2vteEQ2ZMeST6X%2fRTMsO3siuJxiN%2br3nOg8sWY8ig7BgP8nH5hMwOzDV4nmuQ3kDAwNX1WOqq6x0dKkRRBtWrWasxookYPf9GstdSROcBA%2bIijpMtmhJ8ncoQQxBMUMCM512sL0kJ6Jtl4V0tMnVv4NkiHAzkSH1TKcASxH%2b%2b4pdV8aFiMATzcTV5RT%2fCK4UfYyM%2bYn&fich=IniciativasXVI_json.txt&Inline=true',
+    'XVII': 'https://app.parlamento.pt/webutils/docs/doc.txt?path=1Hd0JXSBCBV%2fLYhyviSOaOih6QNFA0%2bLYzFKnyQFWQW8QENd%2fPqsVM4unT%2fLBWPf4TwhBATBBcIbvZ489oVcq5LkvX%2fblnEnKzZW6hWaQT%2fFJ9Pe%2fXAN%2bKXxU%2btDkUr%2fxojL0vytiMOQzj%2fOwFEOUTya2g7udFvyJaK8AHuuo7cK3ZuwVUyoDcVU8CyHmifwqKReGLX%2bytT%2bSP4NKMcgLyVx6%2b5sCBimfKiVd9mzMqKwog7TT%2fzToST0gRW%2bGEKbE8drRG1mjV%2fDzAWiVkd4FBRLu0pEi3vMl7lJ2S%2bojo%2fIuVJxdrTeqdv8cO0%2f9a8uWd%2bYXOv5pgaippaYaJIoLlhVxJIltGbG%2fZjHacqqJ%2bY%3d&fich=IniciativasXVII_json.txt&Inline=true',
 }
 
 def fetch_votes_for_legislature(legislature):
