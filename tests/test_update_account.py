@@ -7,10 +7,12 @@ from urllib.parse import unquote_plus
 
 from votacoes_assembleia_da_republica.update_account import update, render_vote, StateStorage
 from votacoes_assembleia_da_republica.fetch_votes import JSON_URIS
+from votacoes_assembleia_da_republica.state_storage import StateStorage
 
 @pytest.fixture(autouse=True)
 def disable_debug_mode(monkeypatch):
     monkeypatch.setenv('DEBUG_MODE', 'false')
+    monkeypatch.setenv('MASTODON_API_BASE_URL', 'https://masto.pt')
 
 @pytest.fixture(autouse=True)
 def stub_gh_data(monkeypatch, requests_mock):
@@ -18,15 +20,22 @@ def stub_gh_data(monkeypatch, requests_mock):
     monkeypatch.setenv('REPO_OWNER', 'owner')
     monkeypatch.setenv('REPO_PATH', 'owner/repo')
     requests_mock.patch(StateStorage('XVI').gh_variable_url, status_code=200, text='{}')
+    requests_mock.patch(StateStorage('XVII').gh_variable_url, status_code=200, text='{}')
+
+@pytest.fixture(autouse=True)
+def override_vote_date(monkeypatch):
+    monkeypatch.setenv('OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE', '2024-04-01')
+    monkeypatch.setenv('OVERRIDE_TOO_MANY_NEW_VOTES_CHECK', 'true')
+
 
 def test_update_doesnt_crash_if_there_are_no_votes(requests_mock, tmp_path):
     with open('tests/files/legislatures/empty_example.json', 'r') as legislature:
-        requests_mock.get(JSON_URIS['XVI'], text=legislature.read())
+        requests_mock.get(JSON_URIS['XVII'], text=legislature.read())
 
-    update('XVI', tmp_path / 'state.json')
+    update('XVII', tmp_path / 'state.json')
 
     assert requests_mock.called
-    assert requests_mock.call_count == 1
+    assert requests_mock.call_count == 2  # GET to parliament + PATCH to GitHub
 
 def test_render_vote_cuts_down_text_down_to_the_500_char_limit():
     test_vote = {
@@ -45,7 +54,9 @@ def test_render_vote_cuts_down_text_down_to_the_500_char_limit():
 
 def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tmp_path):
     with open('tests/files/legislatures/minimal_example_approved_and_rejected.json', 'r') as legislature:
-        requests_mock.get(JSON_URIS['XVI'], text=legislature.read())
+        requests_mock.get(JSON_URIS['XVII'], text=legislature.read())
+
+    requests_mock.patch(StateStorage('XVII').gh_variable_url, status_code=200, text='{}')
 
     account = { 'id': 1, 'acct': 'user@server.com' }
 
@@ -59,13 +70,13 @@ def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tm
     ])
 
     state_file_path = tmp_path / 'state.json'
-    update('XVI', state_file_path)
+    update('XVII', state_file_path)
 
     assert requests_mock.called
-    assert all(request.hostname in ['app.parlamento.pt', 'masto.pt'] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 7
+    assert all(request.hostname in ['app.parlamento.pt', 'masto.pt', 'api.github.com'] for request in requests_mock.request_history)
+    assert requests_mock.call_count == 8
 
-    with StateStorage(legislature = 'XVI', file_path = state_file_path) as state:
+    with StateStorage(legislature = 'XVII', file_path = state_file_path) as state:
         assert state.get_vote_state('126496') == 'published'
         assert state.get_vote_state('126516') == 'errored'
 
@@ -73,9 +84,9 @@ def test_update_makes_no_mastodon_requests_when_debug_mode_is_enabled(requests_m
     monkeypatch.setenv('DEBUG_MODE', 'true')
 
     with open('tests/files/legislatures/minimal_example_approved_and_rejected.json', 'r') as legislature:
-        requests_mock.get(JSON_URIS['XVI'], text=legislature.read())
+        requests_mock.get(JSON_URIS['XVII'], text=legislature.read())
 
-    update('XVI', tmp_path / 'state.json')
+    update('XVII', tmp_path / 'state.json')
 
     assert requests_mock.called
     assert all(request.hostname == 'app.parlamento.pt' for request in requests_mock.request_history)
@@ -83,7 +94,9 @@ def test_update_makes_no_mastodon_requests_when_debug_mode_is_enabled(requests_m
 
 def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(requests_mock, tmp_path):
     with open('tests/files/legislatures/minimal_example.json', 'r') as legislature:
-        requests_mock.get(JSON_URIS['XVI'], text=legislature.read())
+        requests_mock.get(JSON_URIS['XVII'], text=legislature.read())
+
+    requests_mock.patch(StateStorage('XVII').gh_variable_url, status_code=200, text='{}')
 
     user_name = 'user@server.com'
     account = { 'id': 1, 'acct': user_name }
@@ -93,11 +106,11 @@ def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(reque
     requests_mock.get('https://masto.pt/api/v1/accounts/verify_credentials', status_code = 200, json = account)
     requests_mock.post('https://masto.pt/api/v1/statuses', json = { 'id': thread_id, 'account': account, 'mentions': []})
 
-    update('XVI', tmp_path / 'state.json')
+    update('XVII', tmp_path / 'state.json')
 
     assert requests_mock.called
-    assert all(request.hostname in ['app.parlamento.pt', 'masto.pt'] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 5
+    assert all(request.hostname in ['app.parlamento.pt', 'masto.pt', 'api.github.com'] for request in requests_mock.request_history)
+    assert requests_mock.call_count == 6
 
     status_requests = [request for request in requests_mock.request_history if request.url == 'https://masto.pt/api/v1/statuses']
 
@@ -111,7 +124,7 @@ def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(reque
     assert unquote_plus(status_requests[1].body) == dedent(
         f"""\
         status=@{user_name} 📝️️ Constituição de uma comissão de inquérito parlamentar ao processo de alteração da propriedade do Global Media Group envolvendo o World Opportunity Fund, Lda.
-        🔗 Inquérito Parlamentar (PAN) - http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4d5a5763765247396a6457316c626e527663306c7561574e7059585270646d45765a4446694d546c684e3251745954686c5a6930305a4745784c54686a5a4755744e6d526a4d544d314f544268596a646a4c6d52765933673d&fich=d1b19a7d-a8ef-4da1-8cde-6dc13590ab7c.docx&Inline=true
+        🔗 Inquérito Parlamentar (PAN) - http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4a5447566e4c305276593356745a57353062334e4a626d6c6a6157463061585a684c7a59314d6a597a4f5459354c5456694d3259744e445579596931684d44426d4c5441334e6a6b78597a63324d5445325969356b62324e34&fich=d1b19a7d-a8ef-4da1-8cde-6dc13590ab7c.docx&Inline=true
 
         🔴 Rejeitado
 
@@ -124,7 +137,9 @@ def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(reque
 
 def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(requests_mock, tmp_path):
     with open('tests/files/legislatures/minimal_example_approved_and_rejected.json', 'r') as legislature:
-        requests_mock.get(JSON_URIS['XVI'], text=legislature.read())
+        requests_mock.get(JSON_URIS['XVII'], text=legislature.read())
+
+    requests_mock.patch(StateStorage('XVII').gh_variable_url, status_code=200, text='{}')
 
     user_name = 'user@server.com'
     account = { 'id': 1, 'acct': user_name }
@@ -138,11 +153,11 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
         { 'json': { 'id': rejected_thread_id, 'account': account, 'mentions': [] } },
     ])
 
-    update('XVI', tmp_path / 'state.json')
+    update('XVII', tmp_path / 'state.json')
 
     assert requests_mock.called
-    assert all(request.hostname in ['app.parlamento.pt', 'masto.pt'] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 7
+    assert all(request.hostname in ['app.parlamento.pt', 'masto.pt', 'api.github.com'] for request in requests_mock.request_history)
+    assert requests_mock.call_count == 8
 
     status_requests = [request for request in requests_mock.request_history if request.url == 'https://masto.pt/api/v1/statuses']
 
@@ -156,7 +171,7 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
     assert unquote_plus(status_requests[1].body) == dedent(
         f"""\
         status=@{user_name} 📝️️ Altera o Código do Imposto sobre o Rendimento das Pessoas Singulares
-        🔗 Projeto de Lei (PS) - http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4d5a5763765247396a6457316c626e527663306c7561574e7059585270646d45764d545a6a4f575a6b5a6a6b744e4751334e4330304d6d49344c574a6b5a6a49744d6d566b5957497a4d475a6b4d6d45784c6d52765933673d&fich=16c9fdf9-4d74-42b8-bdf2-2edab30fd2a1.docx&Inline=true
+        🔗 Projeto de Lei (PS) - http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4a5447566e4c305276593356745a57353062334e4a626d6c6a6157463061585a684c7a59314d6a597a4f5459354c5456694d3259744e445579596931684d44426d4c5441334e6a6b78597a63324d5445325969356b62324e34&fich=16c9fdf9-4d74-42b8-bdf2-2edab30fd2a1.docx&Inline=true
 
         🟢 Aprovado
 
@@ -176,7 +191,7 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
     assert unquote_plus(status_requests[3].body) == dedent(
         f"""\
         status=@{user_name} 📝️️ Constituição de uma comissão de inquérito parlamentar ao processo de alteração da propriedade do Global Media Group envolvendo o World Opportunity Fund, Lda.
-        🔗 Inquérito Parlamentar (PAN) - http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4d5a5763765247396a6457316c626e527663306c7561574e7059585270646d45765a4446694d546c684e3251745954686c5a6930305a4745784c54686a5a4755744e6d526a4d544d314f544268596a646a4c6d52765933673d&fich=d1b19a7d-a8ef-4da1-8cde-6dc13590ab7c.docx&Inline=true
+        🔗 Inquérito Parlamentar (PAN) - http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4a5447566e4c305276593356745a57353062334e4a626d6c6a6157463061585a684c7a59314d6a597a4f5459354c5456694d3259744e445579596931684d44426d4c5441334e6a6b78597a63324d5445325969356b62324e34&fich=d1b19a7d-a8ef-4da1-8cde-6dc13590ab7c.docx&Inline=true
 
         🔴 Rejeitado
 

@@ -13,9 +13,6 @@ if __name__ == '__main__':
     load_dotenv()
 
 DEBUG_MODE = os.getenv('DEBUG_MODE', 'false').lower() == 'true'
-OVERRIDE_TOO_MANY_NEW_VOTES_CHECK = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_CHECK', 'false').lower() == 'true'
-OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE', datetime.date.today().isoformat())
-
 TOOT_MAX_LENGTH = 500
 
 def render_thread(result: str, sorted_new_votes: list[dict]) -> str:
@@ -89,6 +86,9 @@ def group_votes_by_result(votes: list[dict]) -> dict[str, list[dict]]:
     return votes_by_result
 
 def update(legislature: str, state_file_path = 'state.json'):
+    OVERRIDE_TOO_MANY_NEW_VOTES_CHECK = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_CHECK', 'false').lower() == 'true'
+    OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE = os.environ.get('OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE', datetime.date.today().isoformat())
+
     with StateStorage(legislature, file_path = state_file_path) as state:
             print('fetching votes')
             raw_votes = fetch_votes_for_legislature(legislature)

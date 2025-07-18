@@ -1,49 +1,68 @@
-{
-  "ArrayOfPt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut": {
-    "pt_gov_ar_objectos_iniciativas_DetalhePesquisaIniciativasOut": [
+[
+  {
+    "DataFimleg": null,
+    "DataInicioleg": "2024-03-26",
+    "IniAnexos": null,
+    "IniAutorDeputados": [],
+    "IniAutorGruposParlamentares": [
+      { "GP": "PAN" }
+    ],
+    "IniAutorOutros": {
+      "iniAutorComissao": null,
+      "nome": "Grupos Parlamentares",
+      "sigla": "G"
+    },
+    "IniciativasEuropeias": null,
+    "IniciativasOrigem": null,
+    "IniciativasOriginadas": null,
+    "IniDescTipo": "Inquérito Parlamentar",
+    "IniEpigrafe": null,
+    "IniEventos": [
       {
-        "iniNr": "2",
-        "iniTipo": "I",
-        "iniDescTipo": "Inquérito Parlamentar",
-        "iniLeg": "XVI",
-        "iniSel": "1",
-        "dataInicioleg": "2024-03-26",
-        "iniTitulo": "Constituição de uma comissão de inquérito parlamentar ao processo de alteração da propriedade do Global Media Group envolvendo o World Opportunity Fund, Lda.",
-        "iniTextoSubst": "SIM",
-        "iniLinkTexto": "http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4d5a5763765247396a6457316c626e527663306c7561574e7059585270646d45765a4446694d546c684e3251745954686c5a6930305a4745784c54686a5a4755744e6d526a4d544d314f544268596a646a4c6d52765933673d&fich=d1b19a7d-a8ef-4da1-8cde-6dc13590ab7c.docx&Inline=true",
-        "iniEventos": {
-          "pt_gov_ar_objectos_iniciativas_EventosOut": [
-            {
-              "oevId": "1514835",
-              "dataFase": "2024-04-19",
-              "fase": "Votação Deliberação",
-              "evtId": "73",
-              "codigoFase": "335",
-              "votacao": {
-                "pt_gov_ar_objectos_VotacaoOut": {
-                  "id": "126496",
-                  "resultado": "Rejeitado",
-                  "reuniao": "8",
-                  "tipoReuniao": "RP",
-                  "detalhe": "A Favor: <I>IL</I>, <I> BE</I>, <I> PCP</I>, <I> L</I>, <I> PAN</I><BR>Contra:<I>PSD</I>, <I> PS</I>, <I> CDS-PP</I><BR>Abstenção:<I>CH</I>",
-                  "data": "2024-04-19"
-                }
-              }
-            }
-          ]
-        },
-        "iniAutorOutros": {
-          "sigla": "G",
-          "nome": "Grupos Parlamentares"
-        },
-        "iniId": "263542",
-        "iniAutorGruposParlamentares": {
-          "pt_gov_ar_objectos_AutoresGruposParlamentaresOut": {
-            "GP": "PAN"
+        "ActId": null,
+        "ActividadesConjuntas": null,
+        "AnexosFase": null,
+        "CodigoFase": "335",
+        "Comissao": null,
+        "DataFase": "2024-04-19",
+        "EvtId": "73",
+        "Fase": "Votação Deliberação",
+        "IniciativasConjuntas": null,
+        "Intervencoesdebates": null,
+        "Links": null,
+        "ObsFase": null,
+        "OevId": "1514835",
+        "OevTextId": null,
+        "PcpublicasConjuntas": null,
+        "PeticoesConjuntas": null,
+        "PublicacaoFase": null,
+        "RecursoDeputados": null,
+        "RecursoGP": null,
+        "TextosAprovados": null,
+        "Votacao": [
+          {
+            "id": "126496",
+            "resultado": "Rejeitado",
+            "reuniao": "8",
+            "tipoReuniao": "RP",
+            "detalhe": "A Favor: <I>IL</I>, <I> BE</I>, <I> PCP</I>, <I> L</I>, <I> PAN</I><BR>Contra:<I>PSD</I>, <I> PS</I>, <I> CDS-PP</I><BR>Abstenção:<I>CH</I>",
+            "data": "2024-04-19"
           }
-        },
-        "iniTextoSubstCampo": "Substituição do texto da iniciativa a pedido do autor em 2024-04-05."
+        ]
       }
-    ]
+    ],
+    "IniId": "263542",
+    "IniLeg": "XVII",
+    "IniLinkTexto": "http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4a5447566e4c305276593356745a57353062334e4a626d6c6a6157463061585a684c7a59314d6a597a4f5459354c5456694d3259744e445579596931684d44426d4c5441334e6a6b78597a63324d5445325969356b62324e34&fich=d1b19a7d-a8ef-4da1-8cde-6dc13590ab7c.docx&Inline=true",
+    "IniNr": "2",
+    "IniObs": null,
+    "IniSel": "1",
+    "IniTextoSubst": "SIM",
+    "IniTextoSubstCampo": "Substituição do texto da iniciativa a pedido do autor em 2024-04-05.",
+    "IniTipo": "I",
+    "IniTitulo": "Constituição de uma comissão de inquérito parlamentar ao processo de alteração da propriedade do Global Media Group envolvendo o World Opportunity Fund, Lda.",
+    "Links": null,
+    "Peticoes": null,
+    "PropostasAlteracao": null
   }
-}
+]
