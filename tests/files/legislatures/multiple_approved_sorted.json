@@ -1,0 +1,200 @@
+[
+  {
+    "DataFimleg": null,
+    "DataInicioleg": "2024-03-26",
+    "IniAnexos": null,
+    "IniAutorDeputados": [],
+    "IniAutorGruposParlamentares": [
+      { "GP": "PS" }
+    ],
+    "IniAutorOutros": {
+      "iniAutorComissao": null,
+      "nome": "Grupos Parlamentares",
+      "sigla": "G"
+    },
+    "IniciativasEuropeias": null,
+    "IniciativasOrigem": null,
+    "IniciativasOriginadas": null,
+    "IniDescTipo": "Projeto de Lei",
+    "IniEpigrafe": null,
+    "IniEventos": [
+      {
+        "ActId": null,
+        "ActividadesConjuntas": null,
+        "AnexosFase": null,
+        "CodigoFase": "250",
+        "Comissao": null,
+        "DataFase": "2024-04-20",
+        "EvtId": "13",
+        "Fase": "Votação na generalidade",
+        "IniciativasConjuntas": null,
+        "Intervencoesdebates": null,
+        "Links": null,
+        "ObsFase": null,
+        "OevId": "1515058",
+        "OevTextId": null,
+        "PcpublicasConjuntas": null,
+        "PeticoesConjuntas": null,
+        "PublicacaoFase": null,
+        "RecursoDeputados": null,
+        "RecursoGP": null,
+        "TextosAprovados": null,
+        "Votacao": [
+          {
+            "id": "200001",
+            "resultado": "Aprovado",
+            "reuniao": "10",
+            "tipoReuniao": "RP",
+            "detalhe": "A Favor: <I>PS</I><BR>Contra:<I>PSD</I><BR>Abstenção:<I>CH</I>",
+            "data": "2024-04-20"
+          }
+        ]
+      }
+    ],
+    "IniId": "300001",
+    "IniLeg": "XVII",
+    "IniLinkTexto": "http://app.parlamento.pt/webutils/docs/doc1.pdf",
+    "IniNr": "70",
+    "IniObs": null,
+    "IniSel": "1",
+    "IniTextoSubst": "NAO",
+    "IniTextoSubstCampo": null,
+    "IniTipo": "J",
+    "IniTitulo": "Projeto de Lei 1",
+    "Links": null,
+    "Peticoes": null,
+    "PropostasAlteracao": null
+  },
+  {
+    "DataFimleg": null,
+    "DataInicioleg": "2024-03-26",
+    "IniAnexos": null,
+    "IniAutorDeputados": [],
+    "IniAutorGruposParlamentares": [
+      { "GP": "PS" }
+    ],
+    "IniAutorOutros": {
+      "iniAutorComissao": null,
+      "nome": "Grupos Parlamentares",
+      "sigla": "G"
+    },
+    "IniciativasEuropeias": null,
+    "IniciativasOrigem": null,
+    "IniciativasOriginadas": null,
+    "IniDescTipo": "Projeto de Lei",
+    "IniEpigrafe": null,
+    "IniEventos": [
+      {
+        "ActId": null,
+        "ActividadesConjuntas": null,
+        "AnexosFase": null,
+        "CodigoFase": "250",
+        "Comissao": null,
+        "DataFase": "2024-04-22",
+        "EvtId": "14",
+        "Fase": "Votação na generalidade",
+        "IniciativasConjuntas": null,
+        "Intervencoesdebates": null,
+        "Links": null,
+        "ObsFase": null,
+        "OevId": "1515059",
+        "OevTextId": null,
+        "PcpublicasConjuntas": null,
+        "PeticoesConjuntas": null,
+        "PublicacaoFase": null,
+        "RecursoDeputados": null,
+        "RecursoGP": null,
+        "TextosAprovados": null,
+        "Votacao": [
+          {
+            "id": "200002",
+            "resultado": "Aprovado",
+            "reuniao": "11",
+            "tipoReuniao": "RP",
+            "detalhe": "A Favor: <I>PS</I><BR>Contra:<I>PSD</I><BR>Abstenção:<I>CH</I>",
+            "data": "2024-04-22"
+          }
+        ]
+      }
+    ],
+    "IniId": "300002",
+    "IniLeg": "XVII",
+    "IniLinkTexto": "http://app.parlamento.pt/webutils/docs/doc2.pdf",
+    "IniNr": "71",
+    "IniObs": null,
+    "IniSel": "1",
+    "IniTextoSubst": "NAO",
+    "IniTextoSubstCampo": null,
+    "IniTipo": "J",
+    "IniTitulo": "Projeto de Lei 2",
+    "Links": null,
+    "Peticoes": null,
+    "PropostasAlteracao": null
+  },
+  {
+    "DataFimleg": null,
+    "DataInicioleg": "2024-03-26",
+    "IniAnexos": null,
+    "IniAutorDeputados": [],
+    "IniAutorGruposParlamentares": [
+      { "GP": "PSD" }
+    ],
+    "IniAutorOutros": {
+      "iniAutorComissao": null,
+      "nome": "Grupos Parlamentares",
+      "sigla": "G"
+    },
+    "IniciativasEuropeias": null,
+    "IniciativasOrigem": null,
+    "IniciativasOriginadas": null,
+    "IniDescTipo": "Projeto de Lei",
+    "IniEpigrafe": null,
+    "IniEventos": [
+      {
+        "ActId": null,
+        "ActividadesConjuntas": null,
+        "AnexosFase": null,
+        "CodigoFase": "250",
+        "Comissao": null,
+        "DataFase": "2024-04-23",
+        "EvtId": "15",
+        "Fase": "Votação na generalidade",
+        "IniciativasConjuntas": null,
+        "Intervencoesdebates": null,
+        "Links": null,
+        "ObsFase": null,
+        "OevId": "1515060",
+        "OevTextId": null,
+        "PcpublicasConjuntas": null,
+        "PeticoesConjuntas": null,
+        "PublicacaoFase": null,
+        "RecursoDeputados": null,
+        "RecursoGP": null,
+        "TextosAprovados": null,
+        "Votacao": [
+          {
+            "id": "200003",
+            "resultado": "Rejeitado",
+            "reuniao": "12",
+            "tipoReuniao": "RP",
+            "detalhe": "A Favor: <I>PSD</I><BR>Contra:<I>PS</I><BR>Abstenção:<I>CH</I>",
+            "data": "2024-04-23"
+          }
+        ]
+      }
+    ],
+    "IniId": "300003",
+    "IniLeg": "XVII",
+    "IniLinkTexto": "http://app.parlamento.pt/webutils/docs/doc3.pdf",
+    "IniNr": "72",
+    "IniObs": null,
+    "IniSel": "1",
+    "IniTextoSubst": "NAO",
+    "IniTextoSubstCampo": null,
+    "IniTipo": "J",
+    "IniTitulo": "Projeto de Lei 3",
+    "Links": null,
+    "Peticoes": null,
+    "PropostasAlteracao": null
+  }
+] 

@@ -201,3 +201,44 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
         👎 PSD, PS, CDS-PP
         &in_reply_to_id={rejected_thread_id}&visibility=unlisted&language=pt"""
     )
+
+
+def test_update_posts_multiple_approved_and_rejected_votes_as_threaded_replies(requests_mock, tmp_path):
+    """
+    Test that multiple approved and rejected votes are posted as replies to the correct threads, with correct in_reply_to_id.
+    """
+    with open('tests/files/legislatures/multiple_approved_sorted.json', 'r') as legislature:
+        requests_mock.get(JSON_URIS['XVII'], text=legislature.read())
+
+    requests_mock.patch(StateStorage('XVII').gh_variable_url, status_code=200, text='{}')
+
+    user_name = 'user@server.com'
+    account = { 'id': 1, 'acct': user_name }
+    approved_thread_id = 1
+    rejected_thread_id = 2
+
+    requests_mock.get('https://masto.pt/api/v1/instance', status_code = 200)
+    requests_mock.get('https://masto.pt/api/v1/accounts/verify_credentials', status_code = 200, json = account)
+    # First post is the approved thread starter, then two approved replies, then rejected thread starter, then rejected reply
+    requests_mock.post('https://masto.pt/api/v1/statuses', [
+        { 'json': { 'id': approved_thread_id, 'account': account, 'mentions': [] } },
+        { 'json': { 'id': 200001, 'account': account, 'mentions': [] } },
+        { 'json': { 'id': 200002, 'account': account, 'mentions': [] } },
+        { 'json': { 'id': rejected_thread_id, 'account': account, 'mentions': [] } },
+        { 'json': { 'id': 200003, 'account': account, 'mentions': [] } },
+    ])
+
+    update('XVII', tmp_path / 'state.json')
+
+    status_requests = [r for r in requests_mock.request_history if r.url == 'https://masto.pt/api/v1/statuses']
+    # First post is the approved thread starter
+    assert 'status=' in unquote_plus(status_requests[0].body)
+    # Next two posts should be approved replies with correct in_reply_to_id
+    for req in status_requests[1:3]:
+        body = unquote_plus(req.body)
+        assert f'&in_reply_to_id={approved_thread_id}' in body, f"Missing correct in_reply_to_id for approved in: {body}"
+    # Fourth post is the rejected thread starter
+    assert 'status=' in unquote_plus(status_requests[3].body)
+    # Fifth post should be rejected reply with correct in_reply_to_id
+    body = unquote_plus(status_requests[4].body)
+    assert f'&in_reply_to_id={rejected_thread_id}' in body, f"Missing correct in_reply_to_id for rejected in: {body}"
