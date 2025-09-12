@@ -35,6 +35,8 @@ def render_vote(vote: dict) -> str:
         vote_detail = vote['vote_detail']
         if vote_detail == 'unanime':
             rendered_vote_detail = '🤝 Unânime'
+        elif vote_detail == 'prejudicado':
+            rendered_vote_detail = '⚪ Prejudicado'
         else:
             with open('vote_detail.template', 'r') as vote_detail_template_file:
                 vote_detail_template = Template(vote_detail_template_file.read())
