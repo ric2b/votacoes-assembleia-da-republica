@@ -18,6 +18,8 @@ class StateStorage:
         else:
             self.state = self.read_repo_variable(self.legislature)
 
+        self.state = self.read_repo_variable(self.legislature)
+
         return self
 
     def __exit__(self, *args):
