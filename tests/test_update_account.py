@@ -20,6 +20,11 @@ def stub_env(monkeypatch):
     monkeypatch.setenv('OVERRIDE_TOO_MANY_NEW_VOTES_CHECK', 'true')
 
 @pytest.fixture(autouse=True)
+def stub_github_get(requests_mock):
+    requests_mock.get(StateStorage('XVI').gh_variable_url, status_code=200, json={ "value": {} })
+    requests_mock.get(StateStorage('XVII').gh_variable_url, status_code=200, json={ "value": {} })
+
+@pytest.fixture(autouse=True)
 def stub_github_patch(requests_mock):
     requests_mock.patch(StateStorage('XVI').gh_variable_url, status_code=200, text='{}')
     requests_mock.patch(StateStorage('XVII').gh_variable_url, status_code=200, text='{}')
@@ -40,7 +45,7 @@ def test_update_doesnt_crash_if_there_are_no_votes(requests_mock, tmp_path):
         requests_mock.get(JSON_URIS['XVII'], text=legislature.read())
     update('XVII', tmp_path / 'state.json')
     assert requests_mock.called
-    assert requests_mock.call_count == 2  # GET to parliament + PATCH to GitHub
+    assert requests_mock.call_count == 3  # GET to parliament + GET to GitHub + PATCH to GitHub
 
 def test_render_vote_cuts_down_text_down_to_the_500_char_limit():
     test_vote = {
@@ -70,10 +75,11 @@ def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tm
     update('XVII', state_file_path)
     assert requests_mock.called
     assert all(request.hostname in ['app.parlamento.pt', 'masto.pt', 'api.github.com'] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 8
-    with StateStorage(legislature = 'XVII', file_path = state_file_path) as state:
-        assert state.get_vote_state('126496') == 'published'
-        assert state.get_vote_state('126516') == 'errored'
+    assert requests_mock.call_count == 9
+
+    for request in requests_mock.request_history:
+        if request.url == StateStorage('XVII').gh_variable_url and request.method == 'PATCH':
+            assert request.json() == { 'value': json.dumps({ '126516': 'errored', '126496': 'published' }) }
 
 def test_update_makes_no_mastodon_requests_when_debug_mode_is_enabled(requests_mock, tmp_path, monkeypatch):
     monkeypatch.setenv('DEBUG_MODE', 'true')
@@ -93,7 +99,7 @@ def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(reque
     update('XVII', tmp_path / 'state.json')
     assert requests_mock.called
     assert all(request.hostname in ['app.parlamento.pt', 'masto.pt', 'api.github.com'] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 6
+    assert requests_mock.call_count == 7
     status_requests = [request for request in requests_mock.request_history if request.url == 'https://masto.pt/api/v1/statuses']
     assert unquote_plus(status_requests[0].body) == dedent(
         f"""\
@@ -129,7 +135,7 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
     update('XVII', tmp_path / 'state.json')
     assert requests_mock.called
     assert all(request.hostname in ['app.parlamento.pt', 'masto.pt', 'api.github.com'] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 8
+    assert requests_mock.call_count == 9
     status_requests = [request for request in requests_mock.request_history if request.url == 'https://masto.pt/api/v1/statuses']
     assert unquote_plus(status_requests[0].body) == dedent(
         f"""\

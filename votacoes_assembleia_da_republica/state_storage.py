@@ -9,18 +9,22 @@ class StateStorage:
         self.file_path = file_path
 
     def __enter__(self):
-        try:
-            with open(self.file_path, 'r') as state_file:
-                self.state = json.load(state_file)
-        except FileNotFoundError:
-            self.state = {}
+        if self.debug_mode:
+            try:
+                with open(self.file_path, 'r') as state_file:
+                    self.state = json.load(state_file)
+            except FileNotFoundError:
+                self.state = {}
+        else:
+            self.state = self.read_repo_variable(self.legislature)
 
         return self
 
     def __exit__(self, *args):
-        if not self.debug_mode:
-            with open(self.file_path, 'w') as state_file:
-                json.dump(self.state, state_file)
+        with open(self.file_path, 'w') as state_file:
+            json.dump(self.state, state_file)
+        
+        if not self.debug_mode: 
             self.update_repo_variable(self.state)
 
     def mark_vote_published(self, vote_id: str) -> None:
@@ -39,9 +43,19 @@ class StateStorage:
     def get_vote_state(self, vote_id: str) -> str:
         return self.state[vote_id]
 
+    def variable_url(self, legislature: str) -> str:
+        return f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/actions/variables/STATE_{legislature}"
+
+    def read_repo_variable(self, legislature: str) -> dict:
+        url = self.variable_url(legislature)
+        headers = { 'Accept': "application/vnd.github+json", 'Authorization': f"Bearer {self.gh_token}" }
+        response = requests.get(url, headers=headers).json()
+
+        print(f"Read variable {response['name']} updated at: {response['updated_at']}")
+        return response['value']
+
     def update_repo_variable(self, state: dict) -> None:
-        variable_name = f"STATE_{self.legislature}"
-        url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/actions/variables/{variable_name}"
+        url = self.variable_url(self.legislature)
         headers = { 'Accept': "application/vnd.github+json", 'Authorization': f"Bearer {self.gh_token}" }
 
         try:
