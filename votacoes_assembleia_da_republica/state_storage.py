@@ -52,7 +52,7 @@ class StateStorage:
         response = requests.get(url, headers=headers).json()
 
         print(f"Read variable {response['name']} updated at: {response['updated_at']}")
-        return response['value']
+        return json.loads(response['value'])
 
     def update_repo_variable(self, state: dict) -> None:
         url = self.variable_url(self.legislature)
