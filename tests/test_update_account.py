@@ -21,8 +21,8 @@ def stub_env(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def stub_github_get(requests_mock):
-    requests_mock.get(StateStorage('XVI').gh_variable_url, status_code=200, json={ "name": "STATE_XVI", "updated_at": "2025-09-16T09:12:30Z", "value": {} })
-    requests_mock.get(StateStorage('XVII').gh_variable_url, status_code=200, json={ "name": "STATE_XVII", "updated_at": "2025-09-16T09:12:30Z", "value": {} })
+    requests_mock.get(StateStorage('XVI').gh_variable_url, status_code=200, json={ "name": "STATE_XVI", "updated_at": "2025-09-16T09:12:30Z", "value": "{}" })
+    requests_mock.get(StateStorage('XVII').gh_variable_url, status_code=200, json={ "name": "STATE_XVII", "updated_at": "2025-09-16T09:12:30Z", "value": "{}" })
 
 @pytest.fixture(autouse=True)
 def stub_github_patch(requests_mock):
