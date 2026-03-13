@@ -75,7 +75,7 @@ def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tm
     update('XVII', state_file_path)
     assert requests_mock.called
     assert all(request.hostname in ['app.parlamento.pt', 'masto.pt', 'api.github.com'] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 9
+    assert requests_mock.call_count == 8
 
     for request in requests_mock.request_history:
         if request.url == StateStorage('XVII').gh_variable_url and request.method == 'PATCH':
@@ -99,7 +99,7 @@ def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(reque
     update('XVII', tmp_path / 'state.json')
     assert requests_mock.called
     assert all(request.hostname in ['app.parlamento.pt', 'masto.pt', 'api.github.com'] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 7
+    assert requests_mock.call_count == 6
     status_requests = [request for request in requests_mock.request_history if request.url == 'https://masto.pt/api/v1/statuses']
     assert unquote_plus(status_requests[0].body) == dedent(
         f"""\
@@ -110,7 +110,7 @@ def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(reque
     )
     assert unquote_plus(status_requests[1].body) == dedent(
         f"""\
-        status=@{mastodon_account['acct']} 📝️️ Constituição de uma comissão de inquérito parlamentar ao processo de alteração da propriedade do Global Media Group envolvendo o World Opportunity Fund, Lda.
+        status=📝️️ Constituição de uma comissão de inquérito parlamentar ao processo de alteração da propriedade do Global Media Group envolvendo o World Opportunity Fund, Lda.
         🔗 Inquérito Parlamentar (PAN) - http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4a5447566e4c305276593356745a57353062334e4a626d6c6a6157463061585a684c7a59314d6a597a4f5459354c5456694d3259744e445579596931684d44426d4c5441334e6a6b78597a63324d5445325969356b62324e34&fich=d1b19a7d-a8ef-4da1-8cde-6dc13590ab7c.docx&Inline=true
 
         🔴 Rejeitado
@@ -135,7 +135,7 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
     update('XVII', tmp_path / 'state.json')
     assert requests_mock.called
     assert all(request.hostname in ['app.parlamento.pt', 'masto.pt', 'api.github.com'] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 9
+    assert requests_mock.call_count == 8
     status_requests = [request for request in requests_mock.request_history if request.url == 'https://masto.pt/api/v1/statuses']
     assert unquote_plus(status_requests[0].body) == dedent(
         f"""\
@@ -146,7 +146,7 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
     )
     assert unquote_plus(status_requests[1].body) == dedent(
         f"""\
-        status=@{mastodon_account['acct']} 📝️️ Altera o Código do Imposto sobre o Rendimento das Pessoas Singulares
+        status=📝️️ Altera o Código do Imposto sobre o Rendimento das Pessoas Singulares
         🔗 Projeto de Lei (PS) - http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4a5447566e4c305276593356745a57353062334e4a626d6c6a6157463061585a684c7a59314d6a597a4f5459354c5456694d3259744e445579596931684d44426d4c5441334e6a6b78597a63324d5445325969356b62324e34&fich=16c9fdf9-4d74-42b8-bdf2-2edab30fd2a1.docx&Inline=true
 
         🟢 Aprovado
@@ -166,7 +166,7 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
     )
     assert unquote_plus(status_requests[3].body) == dedent(
         f"""\
-        status=@{mastodon_account['acct']} 📝️️ Constituição de uma comissão de inquérito parlamentar ao processo de alteração da propriedade do Global Media Group envolvendo o World Opportunity Fund, Lda.
+        status=📝️️ Constituição de uma comissão de inquérito parlamentar ao processo de alteração da propriedade do Global Media Group envolvendo o World Opportunity Fund, Lda.
         🔗 Inquérito Parlamentar (PAN) - http://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c63793959566b6c4a5447566e4c305276593356745a57353062334e4a626d6c6a6157463061585a684c7a59314d6a597a4f5459354c5456694d3259744e445579596931684d44426d4c5441334e6a6b78597a63324d5445325969356b62324e34&fich=d1b19a7d-a8ef-4da1-8cde-6dc13590ab7c.docx&Inline=true
 
         🔴 Rejeitado
