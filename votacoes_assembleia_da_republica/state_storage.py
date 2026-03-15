@@ -1,7 +1,7 @@
 import json
 import os
 import requests
-import sys
+
 
 class StateStorage:
     def __init__(self, legislature, file_path = 'state.json'):
@@ -62,10 +62,10 @@ class StateStorage:
             response = requests.patch(url, headers=headers, json={'value': json.dumps(state)})
 
             if response.status_code not in (201, 204):
-                print(f"Error updating variable: {response.status_code} - {response.text}", file=sys.stderr)
+                print(f"Error updating variable: {response.status_code} - {response.text}")
                 response.raise_for_status()
         except Exception as e:
-            print(f"Error saving data: {e}", file=sys.stderr)
+            print(f"Error saving data: {e}")
             raise e
 
     @property
