@@ -28,8 +28,8 @@ def stub_github_get(requests_mock):
 
 @pytest.fixture(autouse=True)
 def stub_github_patch(requests_mock):
-    requests_mock.patch(StateStorage("XVI").gh_variable_url, status_code=200, text="{}")
-    requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=200, text="{}")
+    requests_mock.patch(StateStorage("XVI").gh_variable_url, status_code=204)
+    requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=204)
 
 
 @pytest.fixture
@@ -44,6 +44,32 @@ def stub_mastodon_api(requests_mock, mastodon_account):
 
 
 # --- Tests ---
+
+
+def test_update_with_local_state_makes_no_github_requests(requests_mock, tmp_path, stub_mastodon_api, mastodon_account):
+    with open("tests/files/legislatures/minimal_example.json", "r") as legislature:
+        requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
+    requests_mock.post("https://masto.pt/api/v1/statuses", json={"id": 9001, "account": mastodon_account, "mentions": []})
+    update("XVII", tmp_path / "state.json")
+    assert all(request.hostname != "api.github.com" for request in requests_mock.request_history)
+
+
+def test_update_does_not_repost_votes_already_in_state(requests_mock, tmp_path):
+    state_file = tmp_path / "state.json"
+    state_file.write_text('{"126496": "published"}')
+    with open("tests/files/legislatures/minimal_example.json", "r") as legislature:
+        requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
+    update("XVII", state_file)
+    assert not any(r.url == "https://masto.pt/api/v1/statuses" for r in requests_mock.request_history)
+
+
+def test_update_aborts_if_too_many_new_votes_are_detected(requests_mock, tmp_path, monkeypatch):
+    monkeypatch.setenv("OVERRIDE_TOO_MANY_NEW_VOTES_CHECK", "false")
+    raw_votes = [{"vote_id": str(i)} for i in range(101)]
+    monkeypatch.setattr("votacoes_assembleia_da_republica.update_account.fetch_votes_for_legislature", lambda _: raw_votes)
+    monkeypatch.setattr("votacoes_assembleia_da_republica.update_account.parse_vote", lambda v: v)
+    with pytest.raises(AssertionError, match="state might have been lost"):
+        update("XVII", tmp_path / "state.json")
 
 
 def test_update_doesnt_crash_if_there_are_no_votes(requests_mock, tmp_path):
@@ -72,7 +98,7 @@ def test_render_vote_cuts_down_text_down_to_the_500_char_limit():
 def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tmp_path, stub_mastodon_api, mastodon_account):
     with open("tests/files/legislatures/minimal_example_approved_and_rejected.json", "r") as legislature:
         requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
-    requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=200, text="{}")
+    requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=204)
     requests_mock.post(
         "https://masto.pt/api/v1/statuses",
         [
@@ -106,7 +132,7 @@ def test_update_makes_no_mastodon_requests_when_debug_mode_is_enabled(requests_m
 def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(requests_mock, tmp_path, stub_mastodon_api, mastodon_account):
     with open("tests/files/legislatures/minimal_example.json", "r") as legislature:
         requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
-    requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=200, text="{}")
+    requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=204)
     thread_id = 1
     requests_mock.post("https://masto.pt/api/v1/statuses", json={"id": thread_id, "account": mastodon_account, "mentions": []})
     update("XVII", tmp_path / "state.json", use_github=True)
@@ -139,7 +165,7 @@ def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(reque
 def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(requests_mock, tmp_path, stub_mastodon_api, mastodon_account):
     with open("tests/files/legislatures/minimal_example_approved_and_rejected.json", "r") as legislature:
         requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
-    requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=200, text="{}")
+    requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=204)
     approved_thread_id = 1
     rejected_thread_id = 2
     requests_mock.post(
@@ -202,7 +228,7 @@ def test_update_posts_multiple_approved_and_rejected_votes_as_threaded_replies(r
     """
     with open("tests/files/legislatures/multiple_approved_sorted.json", "r") as legislature:
         requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
-    requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=200, text="{}")
+    requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=204)
     approved_thread_id = 1
     rejected_thread_id = 2
     requests_mock.post(
