@@ -15,12 +15,16 @@ requests-mock = "^1.12.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.15.6"
+taskipy = "^1.14.1"
 
 [tool.ruff]
 line-length = 160
 
 [tool.ruff.format]
 skip-magic-trailing-comma = true
+
+[tool.taskipy.tasks]
+compress-state = "PYTHONPATH=. python3 scripts/compress_state.py"
 
 [build-system]
 requires = ["poetry-core"]

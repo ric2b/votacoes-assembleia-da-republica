@@ -1,6 +1,19 @@
+import base64
+import gzip
 import json
 import os
 import requests
+
+
+def _compress_state(state: dict) -> str:
+    return base64.b64encode(gzip.compress(json.dumps(state).encode())).decode()
+
+
+def _decompress_state(value: str) -> dict:
+    try:
+        return json.loads(gzip.decompress(base64.b64decode(value, validate=True)))
+    except Exception:
+        return json.loads(value)
 
 
 class StateStorage:
@@ -52,14 +65,14 @@ class StateStorage:
         response = requests.get(url, headers=headers).json()
 
         print(f"Read variable {response['name']} updated at: {response['updated_at']}")
-        return json.loads(response["value"])
+        return _decompress_state(response["value"])
 
     def update_repo_variable(self, state: dict) -> None:
         url = self.variable_url(self.legislature)
         headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {self.gh_token}"}
 
         try:
-            response = requests.patch(url, headers=headers, json={"value": json.dumps(state)})
+            response = requests.patch(url, headers=headers, json={"value": _compress_state(state)})
 
             if response.status_code not in (201, 204):
                 print(f"Error updating variable: {response.status_code} - {response.text}")

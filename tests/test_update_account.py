@@ -1,11 +1,10 @@
-import json
 import pytest
 from textwrap import dedent
 from urllib.parse import unquote_plus
 
 from votacoes_assembleia_da_republica.update_account import update, render_vote
 from votacoes_assembleia_da_republica.fetch_votes import JSON_URIS
-from votacoes_assembleia_da_republica.state_storage import StateStorage
+from votacoes_assembleia_da_republica.state_storage import StateStorage, _decompress_state
 
 # --- Consolidated Fixtures ---
 
@@ -91,7 +90,7 @@ def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tm
 
     for request in requests_mock.request_history:
         if request.url == StateStorage("XVII").gh_variable_url and request.method == "PATCH":
-            assert request.json() == {"value": json.dumps({"126516": "errored", "126496": "published"})}
+            assert _decompress_state(request.json()["value"]) == {"126516": "errored", "126496": "published"}
 
 
 def test_update_makes_no_mastodon_requests_when_debug_mode_is_enabled(requests_mock, tmp_path, monkeypatch):
