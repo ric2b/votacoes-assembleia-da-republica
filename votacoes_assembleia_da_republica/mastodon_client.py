@@ -22,7 +22,7 @@ class MastodonClient:
             print('--------------------')
             return
 
-        return self.client.status_reply(reply_to, rendered_vote, visibility = 'unlisted', idempotency_key = idempotency_key, language = 'pt')
+        return self.client.status_post(rendered_vote, in_reply_to_id = reply_to.id, visibility = 'unlisted', idempotency_key = idempotency_key, language = 'pt')
 
     @property
     def api_base_url(self):

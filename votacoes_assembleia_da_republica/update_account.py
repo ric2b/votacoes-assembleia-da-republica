@@ -57,8 +57,8 @@ def render_vote(vote: dict) -> str:
             initiative_uri = vote['initiative_uri'],
         )
 
-        # Mastodon counts urls as 23 characters maximum
-        rendered_length = len(rendered) - len(vote['initiative_uri']) + min(len(vote['initiative_uri']), 23)
+        # Mastodon always counts urls as 23 characters
+        rendered_length = len(rendered) - len(vote['initiative_uri']) + 23
 
         if rendered_length <= TOOT_MAX_LENGTH:
             return rendered
