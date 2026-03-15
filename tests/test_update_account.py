@@ -3,7 +3,7 @@ import pytest
 from textwrap import dedent
 from urllib.parse import unquote_plus
 
-from votacoes_assembleia_da_republica.update_account import update, render_vote, StateStorage
+from votacoes_assembleia_da_republica.update_account import update, render_vote
 from votacoes_assembleia_da_republica.fetch_votes import JSON_URIS
 from votacoes_assembleia_da_republica.state_storage import StateStorage
 
@@ -116,7 +116,7 @@ def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(reque
     assert requests_mock.call_count == 6
     status_requests = [request for request in requests_mock.request_history if request.url == "https://masto.pt/api/v1/statuses"]
     assert unquote_plus(status_requests[0].body) == dedent(
-        f"""\
+        """\
         status=🔴 Rejeitadas - Votações na Assembleia da República (entre 2024-04-19 e 2024-04-19)
 
         Veja as votações individuais nas respostas 🧵
@@ -156,7 +156,7 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
     assert requests_mock.call_count == 8
     status_requests = [request for request in requests_mock.request_history if request.url == "https://masto.pt/api/v1/statuses"]
     assert unquote_plus(status_requests[0].body) == dedent(
-        f"""\
+        """\
         status=🟢 Aprovadas - Votações na Assembleia da República (entre 2024-04-24 e 2024-04-24)
 
         Veja as votações individuais nas respostas 🧵
@@ -176,7 +176,7 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
         &in_reply_to_id={approved_thread_id}&visibility=unlisted&language=pt"""
     )
     assert unquote_plus(status_requests[2].body) == dedent(
-        f"""\
+        """\
         status=🔴 Rejeitadas - Votações na Assembleia da República (entre 2024-04-19 e 2024-04-19)
 
         Veja as votações individuais nas respostas 🧵

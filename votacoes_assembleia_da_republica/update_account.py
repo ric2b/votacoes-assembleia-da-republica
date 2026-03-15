@@ -1,6 +1,7 @@
 import os
 import datetime
 import hashlib
+from dotenv import load_dotenv
 from operator import itemgetter
 from string import Template
 from mastodon import MastodonError

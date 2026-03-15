@@ -9,7 +9,7 @@ class MastodonClient:
 
     def start_vote_thread(self, rendered_thread: str, idempotency_key=None) -> dict:
         if self.debug_mode:
-            print(f"would post thread:")
+            print("would post thread:")
             print(rendered_thread)
             print("--------------------")
             return
@@ -18,7 +18,7 @@ class MastodonClient:
 
     def post_vote(self, rendered_vote: str, reply_to: dict, idempotency_key=None) -> dict:
         if self.debug_mode:
-            print(f"would post vote:")
+            print("would post vote:")
             print(rendered_vote)
             print("--------------------")
             return
