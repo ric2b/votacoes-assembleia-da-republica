@@ -4,14 +4,14 @@ import requests
 
 
 class StateStorage:
-    def __init__(self, legislature, file_path = 'state.json'):
+    def __init__(self, legislature, file_path="state.json"):
         self.legislature = legislature
         self.file_path = file_path
 
     def __enter__(self):
         if self.debug_mode:
             try:
-                with open(self.file_path, 'r') as state_file:
+                with open(self.file_path, "r") as state_file:
                     self.state = json.load(state_file)
             except FileNotFoundError:
                 self.state = {}
@@ -21,21 +21,21 @@ class StateStorage:
         return self
 
     def __exit__(self, *args):
-        with open(self.file_path, 'w') as state_file:
+        with open(self.file_path, "w") as state_file:
             json.dump(self.state, state_file)
-        
-        if not self.debug_mode: 
+
+        if not self.debug_mode:
             self.update_repo_variable(self.state)
 
     def mark_vote_published(self, vote_id: str) -> None:
-        self.state[vote_id] = 'published'
+        self.state[vote_id] = "published"
 
     def mark_vote_errored(self, vote_id: str) -> None:
-        self.state[vote_id] = 'errored'
+        self.state[vote_id] = "errored"
 
     def skip_vote(self, vote_id: str) -> None:
         if vote_id not in self.state:
-            self.state[vote_id] = 'skipped'
+            self.state[vote_id] = "skipped"
 
     def is_new_vote(self, vote_id: str) -> bool:
         return vote_id not in self.state
@@ -48,18 +48,18 @@ class StateStorage:
 
     def read_repo_variable(self, legislature: str) -> dict:
         url = self.variable_url(legislature)
-        headers = { 'Accept': "application/vnd.github+json", 'Authorization': f"Bearer {self.gh_token}" }
+        headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {self.gh_token}"}
         response = requests.get(url, headers=headers).json()
 
         print(f"Read variable {response['name']} updated at: {response['updated_at']}")
-        return json.loads(response['value'])
+        return json.loads(response["value"])
 
     def update_repo_variable(self, state: dict) -> None:
         url = self.variable_url(self.legislature)
-        headers = { 'Accept': "application/vnd.github+json", 'Authorization': f"Bearer {self.gh_token}" }
+        headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {self.gh_token}"}
 
         try:
-            response = requests.patch(url, headers=headers, json={'value': json.dumps(state)})
+            response = requests.patch(url, headers=headers, json={"value": json.dumps(state)})
 
             if response.status_code not in (201, 204):
                 print(f"Error updating variable: {response.status_code} - {response.text}")
@@ -74,16 +74,16 @@ class StateStorage:
 
     @property
     def gh_token(self):
-        return os.environ.get('GH_VARIABLE_UPDATE_TOKEN')
+        return os.environ.get("GH_VARIABLE_UPDATE_TOKEN")
 
     @property
     def repo_owner(self):
-        return os.environ.get('REPO_OWNER')
+        return os.environ.get("REPO_OWNER")
 
     @property
     def repo_name(self):
-        return os.environ.get('REPO_PATH').split("/")[-1]
+        return os.environ.get("REPO_PATH").split("/")[-1]
 
     @property
     def debug_mode(self):
-        return os.getenv('DEBUG_MODE', 'false').lower() == 'true'
+        return os.getenv("DEBUG_MODE", "false").lower() == "true"

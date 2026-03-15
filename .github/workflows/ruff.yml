@@ -1,0 +1,17 @@
+name: ruff
+on: push
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pipx install poetry
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'poetry'
+      - run: poetry install --with dev
+      - name: Check formatting
+        run: poetry run ruff format --check .
