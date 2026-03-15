@@ -88,11 +88,11 @@ def group_votes_by_result(votes: list[dict]) -> dict[str, list[dict]]:
     return votes_by_result
 
 
-def update(legislature: str, state_file_path="state.json"):
+def update(legislature: str, state_file_path="state.json", use_github=False):
     OVERRIDE_TOO_MANY_NEW_VOTES_CHECK = os.environ.get("OVERRIDE_TOO_MANY_NEW_VOTES_CHECK", "false").lower() == "true"
     OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE = os.environ.get("OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE", datetime.date.today().isoformat())
 
-    with StateStorage(legislature, file_path=state_file_path) as state:
+    with StateStorage(legislature, file_path=state_file_path, use_github=use_github) as state:
         print("fetching votes")
         raw_votes = fetch_votes_for_legislature(legislature)
 
@@ -139,5 +139,10 @@ def update(legislature: str, state_file_path="state.json"):
 
 
 if __name__ == "__main__":
-    update("XVII")
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--github-state", action="store_true", help="Read/write state from GitHub variable instead of local state.json")
+    args = parser.parse_args()
+    update("XVII", use_github=args.github_state)
     print("done")

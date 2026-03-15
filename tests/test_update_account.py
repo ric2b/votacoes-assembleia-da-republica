@@ -49,7 +49,7 @@ def stub_mastodon_api(requests_mock, mastodon_account):
 def test_update_doesnt_crash_if_there_are_no_votes(requests_mock, tmp_path):
     with open("tests/files/legislatures/empty_example.json", "r") as legislature:
         requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
-    update("XVII", tmp_path / "state.json")
+    update("XVII", tmp_path / "state.json", use_github=True)
     assert requests_mock.called
     assert requests_mock.call_count == 3  # GET to parliament + GET to GitHub + PATCH to GitHub
 
@@ -83,7 +83,7 @@ def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tm
         ],
     )
     state_file_path = tmp_path / "state.json"
-    update("XVII", state_file_path)
+    update("XVII", state_file_path, use_github=True)
     assert requests_mock.called
     assert all(request.hostname in ["app.parlamento.pt", "masto.pt", "api.github.com"] for request in requests_mock.request_history)
     assert requests_mock.call_count == 8
@@ -109,7 +109,7 @@ def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(reque
     requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=200, text="{}")
     thread_id = 1
     requests_mock.post("https://masto.pt/api/v1/statuses", json={"id": thread_id, "account": mastodon_account, "mentions": []})
-    update("XVII", tmp_path / "state.json")
+    update("XVII", tmp_path / "state.json", use_github=True)
     assert requests_mock.called
     assert all(request.hostname in ["app.parlamento.pt", "masto.pt", "api.github.com"] for request in requests_mock.request_history)
     assert requests_mock.call_count == 6
@@ -149,7 +149,7 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
             {"json": {"id": rejected_thread_id, "account": mastodon_account, "mentions": []}},
         ],
     )
-    update("XVII", tmp_path / "state.json")
+    update("XVII", tmp_path / "state.json", use_github=True)
     assert requests_mock.called
     assert all(request.hostname in ["app.parlamento.pt", "masto.pt", "api.github.com"] for request in requests_mock.request_history)
     assert requests_mock.call_count == 8
@@ -215,7 +215,7 @@ def test_update_posts_multiple_approved_and_rejected_votes_as_threaded_replies(r
             {"json": {"id": 200003, "account": mastodon_account, "mentions": []}},
         ],
     )
-    update("XVII", tmp_path / "state.json")
+    update("XVII", tmp_path / "state.json", use_github=True)
     status_requests = [r for r in requests_mock.request_history if r.url == "https://masto.pt/api/v1/statuses"]
     # First post is the approved thread starter
     assert "status=" in unquote_plus(status_requests[0].body)

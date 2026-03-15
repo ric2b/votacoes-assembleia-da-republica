@@ -31,7 +31,7 @@ jobs:
           cache: 'poetry'
       - run: poetry install
       - name: Update account
-        run: poetry run python3 -m votacoes_assembleia_da_republica.update_account
+        run: poetry run python3 -m votacoes_assembleia_da_republica.update_account --github-state
         env:
           GH_VARIABLE_UPDATE_TOKEN: ${{ secrets.GH_VARIABLE_UPDATE_TOKEN }}
           REPO_OWNER: ${{ github.repository_owner }}

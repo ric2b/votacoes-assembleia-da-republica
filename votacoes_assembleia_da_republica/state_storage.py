@@ -17,19 +17,20 @@ def _decompress_state(value: str) -> dict:
 
 
 class StateStorage:
-    def __init__(self, legislature, file_path="state.json"):
+    def __init__(self, legislature, file_path="state.json", use_github=False):
         self.legislature = legislature
         self.file_path = file_path
+        self.use_github = use_github
 
     def __enter__(self):
-        if self.debug_mode:
+        if self.use_github:
+            self.state = self.read_repo_variable(self.legislature)
+        else:
             try:
                 with open(self.file_path, "r") as state_file:
                     self.state = json.load(state_file)
             except FileNotFoundError:
                 self.state = {}
-        else:
-            self.state = self.read_repo_variable(self.legislature)
 
         return self
 
@@ -37,7 +38,7 @@ class StateStorage:
         with open(self.file_path, "w") as state_file:
             json.dump(self.state, state_file)
 
-        if not self.debug_mode:
+        if self.use_github:
             self.update_repo_variable(self.state)
 
     def mark_vote_published(self, vote_id: str) -> None:
@@ -96,7 +97,3 @@ class StateStorage:
     @property
     def repo_name(self):
         return os.environ.get("REPO_PATH").split("/")[-1]
-
-    @property
-    def debug_mode(self):
-        return os.getenv("DEBUG_MODE", "false").lower() == "true"
