@@ -16,7 +16,7 @@ def stub_env(monkeypatch):
     monkeypatch.setenv("GH_VARIABLE_UPDATE_TOKEN", "gh_token")
     monkeypatch.setenv("REPO_OWNER", "owner")
     monkeypatch.setenv("REPO_PATH", "owner/repo")
-    monkeypatch.setenv("OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE", "2024-04-01")
+    monkeypatch.setenv("OVERRIDE_UNSAFE_STATE_SKIP_POSTS_BEFORE_ISO_DATE", "2024-04-01")
     monkeypatch.setenv("OVERRIDE_UNSAFE_STATE_CHECK", "true")
 
 

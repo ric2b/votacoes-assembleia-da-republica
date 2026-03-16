@@ -14,8 +14,8 @@ on:
         description: 'Override safety checks when unsafe state is detected (too many new votes or last post ID mismatch)'
         required: false
         default: false
-      override_too_many_new_votes_allow_after_iso_date:
-        description: 'ISO date after which new votes will be allowed if too many are detected'
+      override_unsafe_state_skip_posts_before_iso_date:
+        description: 'minimum ISO date for votes to be posted, votes before that date will be skipped'
         required: false
         default: '9999-12-31'
 
@@ -40,7 +40,7 @@ jobs:
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
           OVERRIDE_UNSAFE_STATE_CHECK: ${{ github.event.inputs.override_unsafe_state_check }}
-          OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE: ${{ github.event.inputs.override_too_many_new_votes_allow_after_iso_date }}
+          OVERRIDE_UNSAFE_STATE_SKIP_POSTS_BEFORE_ISO_DATE: ${{ github.event.inputs.override_unsafe_state_skip_posts_before_iso_date }}
       - name: Archive state
         uses: actions/upload-artifact@v4
         with:
