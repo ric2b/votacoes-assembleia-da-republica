@@ -21,6 +21,7 @@ class StateStorage:
         self.legislature = legislature
         self.file_path = file_path
         self.use_github = use_github
+        self.last_post_id = None
 
     def __enter__(self):
         if self.use_github:
@@ -40,6 +41,33 @@ class StateStorage:
 
         if self.use_github:
             self.update_repo_variable(self.state)
+            if self.last_post_id is not None:
+                self.update_last_post_id_variable(self.last_post_id)
+
+    def set_last_post_id(self, post_id: str) -> None:
+        self.last_post_id = post_id
+
+    def read_last_post_id(self) -> str | None:
+        if not self.use_github:
+            return None
+        url = self.last_post_id_variable_url
+        headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {self.gh_token}"}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 404:
+            return None
+        return response.json()["value"]
+
+    def update_last_post_id_variable(self, post_id: str) -> None:
+        url = self.last_post_id_variable_url
+        headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {self.gh_token}"}
+        try:
+            response = requests.patch(url, headers=headers, json={"value": post_id})
+            if response.status_code not in (201, 204):
+                print(f"Error updating last post ID variable: {response.status_code} - {response.text}")
+                response.raise_for_status()
+        except Exception as e:
+            print(f"Error saving last post ID: {e}")
+            raise e
 
     def mark_vote_published(self, vote_id: str) -> None:
         self.state[vote_id] = "published"
@@ -81,6 +109,10 @@ class StateStorage:
         except Exception as e:
             print(f"Error saving data: {e}")
             raise e
+
+    @property
+    def last_post_id_variable_url(self):
+        return f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/actions/variables/LAST_POST_ID_{self.legislature}"
 
     @property
     def gh_variable_url(self):

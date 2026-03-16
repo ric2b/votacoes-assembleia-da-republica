@@ -16,6 +16,15 @@ class MastodonClient:
 
         return self.client.status_post(rendered_thread, idempotency_key=idempotency_key, language="pt")
 
+    def latest_post_id(self) -> str | None:
+        if self.debug_mode:
+            return None
+        me = self.client.me()
+        statuses = self.client.account_statuses(me["id"], limit=1)
+        if not statuses:
+            return None
+        return str(statuses[0]["id"])
+
     def post_vote(self, rendered_vote: str, reply_to: dict, idempotency_key=None) -> dict:
         if self.debug_mode:
             print("would post vote:")

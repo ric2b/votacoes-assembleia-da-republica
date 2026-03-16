@@ -89,7 +89,7 @@ def group_votes_by_result(votes: list[dict]) -> dict[str, list[dict]]:
 
 
 def update(legislature: str, state_file_path="state.json", use_github=False):
-    OVERRIDE_TOO_MANY_NEW_VOTES_CHECK = os.environ.get("OVERRIDE_TOO_MANY_NEW_VOTES_CHECK", "false").lower() == "true"
+    OVERRIDE_UNSAFE_STATE_CHECK = os.environ.get("OVERRIDE_UNSAFE_STATE_CHECK", "false").lower() == "true"
     OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE = os.environ.get("OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE", datetime.date.today().isoformat())
 
     with StateStorage(legislature, file_path=state_file_path, use_github=use_github) as state:
@@ -102,10 +102,10 @@ def update(legislature: str, state_file_path="state.json", use_github=False):
             print("no new votes")
             return
 
-        if len(new_votes) > 100 and not OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
+        if len(new_votes) > 100 and not OVERRIDE_UNSAFE_STATE_CHECK:
             raise AssertionError(f"Found {len(new_votes)} new votes, state might have been lost, aborting.")
 
-        if OVERRIDE_TOO_MANY_NEW_VOTES_CHECK:
+        if OVERRIDE_UNSAFE_STATE_CHECK:
             print(f"Found {len(new_votes)} new votes, overriding check and allowing the ones after: {OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE}")
             for expired_vote in new_votes:
                 if expired_vote["date"] <= OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE:
@@ -116,8 +116,17 @@ def update(legislature: str, state_file_path="state.json", use_github=False):
         print("posting votes")
         m = MastodonClient()
 
+        stored_last_post_id = state.read_last_post_id()
+        if stored_last_post_id is not None and not OVERRIDE_UNSAFE_STATE_CHECK:
+            actual_last_post_id = m.latest_post_id()
+            if actual_last_post_id != stored_last_post_id:
+                raise AssertionError(
+                    f"Last post ID mismatch: stored={stored_last_post_id}, actual={actual_last_post_id}. State may be stale, aborting to avoid duplicate posts."
+                )
+
         new_votes_by_result = group_votes_by_result(new_votes)
 
+        last_post_id = None
         for result in sorted(new_votes_by_result):
             new_votes_for_result = new_votes_by_result[result]
             print(f"starting a thread for result {result}")
@@ -131,11 +140,16 @@ def update(legislature: str, state_file_path="state.json", use_github=False):
 
                 print(f"posting vote {new_vote_for_result}")
                 try:
-                    m.post_vote(render_vote(new_vote_for_result), reply_to=result_thread, idempotency_key=vote_id)
+                    post = m.post_vote(render_vote(new_vote_for_result), reply_to=result_thread, idempotency_key=vote_id)
                     state.mark_vote_published(vote_id)
+                    if post is not None:
+                        last_post_id = str(post["id"])
                 except MastodonError as e:
                     print(f"error posting vote {vote_id}: {e}")
                     state.mark_vote_errored(vote_id)
+
+        if last_post_id is not None:
+            state.set_last_post_id(last_post_id)
 
 
 if __name__ == "__main__":

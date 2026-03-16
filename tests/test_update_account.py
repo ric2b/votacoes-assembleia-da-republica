@@ -17,19 +17,23 @@ def stub_env(monkeypatch):
     monkeypatch.setenv("REPO_OWNER", "owner")
     monkeypatch.setenv("REPO_PATH", "owner/repo")
     monkeypatch.setenv("OVERRIDE_TOO_MANY_NEW_VOTES_ALLOW_AFTER_ISO_DATE", "2024-04-01")
-    monkeypatch.setenv("OVERRIDE_TOO_MANY_NEW_VOTES_CHECK", "true")
+    monkeypatch.setenv("OVERRIDE_UNSAFE_STATE_CHECK", "true")
 
 
 @pytest.fixture(autouse=True)
 def stub_github_get(requests_mock):
     requests_mock.get(StateStorage("XVI").gh_variable_url, status_code=200, json={"name": "STATE_XVI", "updated_at": "2025-09-16T09:12:30Z", "value": "{}"})
     requests_mock.get(StateStorage("XVII").gh_variable_url, status_code=200, json={"name": "STATE_XVII", "updated_at": "2025-09-16T09:12:30Z", "value": "{}"})
+    requests_mock.get(StateStorage("XVI").last_post_id_variable_url, status_code=404)
+    requests_mock.get(StateStorage("XVII").last_post_id_variable_url, status_code=404)
 
 
 @pytest.fixture(autouse=True)
 def stub_github_patch(requests_mock):
     requests_mock.patch(StateStorage("XVI").gh_variable_url, status_code=204)
     requests_mock.patch(StateStorage("XVII").gh_variable_url, status_code=204)
+    requests_mock.patch(StateStorage("XVI").last_post_id_variable_url, status_code=204)
+    requests_mock.patch(StateStorage("XVII").last_post_id_variable_url, status_code=204)
 
 
 @pytest.fixture
@@ -64,7 +68,7 @@ def test_update_does_not_repost_votes_already_in_state(requests_mock, tmp_path):
 
 
 def test_update_aborts_if_too_many_new_votes_are_detected(requests_mock, tmp_path, monkeypatch):
-    monkeypatch.setenv("OVERRIDE_TOO_MANY_NEW_VOTES_CHECK", "false")
+    monkeypatch.setenv("OVERRIDE_UNSAFE_STATE_CHECK", "false")
     raw_votes = [{"vote_id": str(i)} for i in range(101)]
     monkeypatch.setattr("votacoes_assembleia_da_republica.update_account.fetch_votes_for_legislature", lambda _: raw_votes)
     monkeypatch.setattr("votacoes_assembleia_da_republica.update_account.parse_vote", lambda v: v)
@@ -112,7 +116,7 @@ def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tm
     update("XVII", state_file_path, use_github=True)
     assert requests_mock.called
     assert all(request.hostname in ["app.parlamento.pt", "masto.pt", "api.github.com"] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 8
+    assert requests_mock.call_count == 10
 
     for request in requests_mock.request_history:
         if request.url == StateStorage("XVII").gh_variable_url and request.method == "PATCH":
@@ -138,7 +142,7 @@ def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(reque
     update("XVII", tmp_path / "state.json", use_github=True)
     assert requests_mock.called
     assert all(request.hostname in ["app.parlamento.pt", "masto.pt", "api.github.com"] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 6
+    assert requests_mock.call_count == 8
     status_requests = [request for request in requests_mock.request_history if request.url == "https://masto.pt/api/v1/statuses"]
     assert unquote_plus(status_requests[0].body) == dedent(
         """\
@@ -178,7 +182,7 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
     update("XVII", tmp_path / "state.json", use_github=True)
     assert requests_mock.called
     assert all(request.hostname in ["app.parlamento.pt", "masto.pt", "api.github.com"] for request in requests_mock.request_history)
-    assert requests_mock.call_count == 8
+    assert requests_mock.call_count == 10
     status_requests = [request for request in requests_mock.request_history if request.url == "https://masto.pt/api/v1/statuses"]
     assert unquote_plus(status_requests[0].body) == dedent(
         """\
@@ -220,6 +224,72 @@ def test_update_creates_two_threads_if_there_both_approved_and_rejected_votes(re
         👎 PSD, PS, CDS-PP
         &in_reply_to_id={rejected_thread_id}&visibility=unlisted&language=pt"""
     )
+
+
+def test_update_aborts_if_last_post_id_does_not_match(requests_mock, tmp_path, monkeypatch, stub_mastodon_api):
+    monkeypatch.setenv("OVERRIDE_UNSAFE_STATE_CHECK", "false")
+    requests_mock.get(StateStorage("XVII").last_post_id_variable_url, status_code=200, json={"value": "9000001"})
+    with open("tests/files/legislatures/minimal_example.json", "r") as legislature:
+        requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
+    monkeypatch.setattr("votacoes_assembleia_da_republica.update_account.MastodonClient.latest_post_id", lambda self: "9000999")
+    with pytest.raises(AssertionError, match="Last post ID mismatch"):
+        update("XVII", tmp_path / "state.json", use_github=True)
+    assert not any(r.url == "https://masto.pt/api/v1/statuses" for r in requests_mock.request_history)
+
+
+def test_update_proceeds_if_last_post_id_matches(requests_mock, tmp_path, monkeypatch, stub_mastodon_api, mastodon_account):
+    monkeypatch.setenv("OVERRIDE_UNSAFE_STATE_CHECK", "false")
+    requests_mock.get(StateStorage("XVII").last_post_id_variable_url, status_code=200, json={"value": "9000001"})
+    with open("tests/files/legislatures/minimal_example.json", "r") as legislature:
+        requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
+    requests_mock.post("https://masto.pt/api/v1/statuses", json={"id": 9000002, "account": mastodon_account, "mentions": []})
+    monkeypatch.setattr("votacoes_assembleia_da_republica.update_account.MastodonClient.latest_post_id", lambda self: "9000001")
+    update("XVII", tmp_path / "state.json", use_github=True)
+    assert any(r.url == "https://masto.pt/api/v1/statuses" for r in requests_mock.request_history)
+    last_post_id_patches = [r for r in requests_mock.request_history if r.url == StateStorage("XVII").last_post_id_variable_url and r.method == "PATCH"]
+    assert len(last_post_id_patches) == 1
+    assert last_post_id_patches[0].json()["value"] == "9000002"
+
+
+def test_update_skips_staleness_check_if_no_last_post_id_stored(requests_mock, tmp_path, stub_mastodon_api, mastodon_account):
+    # LAST_POST_ID returns 404 (autouse fixture) — no previous post recorded, so no check needed
+    with open("tests/files/legislatures/minimal_example.json", "r") as legislature:
+        requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
+    requests_mock.post("https://masto.pt/api/v1/statuses", json={"id": 9001, "account": mastodon_account, "mentions": []})
+    update("XVII", tmp_path / "state.json", use_github=True)
+    assert any(r.url == "https://masto.pt/api/v1/statuses" for r in requests_mock.request_history)
+
+
+def test_update_does_not_update_last_post_id_if_all_posts_error(requests_mock, tmp_path, stub_mastodon_api, mastodon_account):
+    with open("tests/files/legislatures/minimal_example.json", "r") as legislature:
+        requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
+    requests_mock.post(
+        "https://masto.pt/api/v1/statuses",
+        [
+            {"json": {"id": 1, "account": mastodon_account, "mentions": []}},  # thread start succeeds
+            {"status_code": 422, "text": "Validation failed: Text limite de caracter excedeu 500"},  # vote errors
+        ],
+    )
+    update("XVII", tmp_path / "state.json", use_github=True)
+    assert not any(r.url == StateStorage("XVII").last_post_id_variable_url and r.method == "PATCH" for r in requests_mock.request_history)
+
+
+def test_update_sets_last_post_id_to_last_successful_post(requests_mock, tmp_path, stub_mastodon_api, mastodon_account):
+    with open("tests/files/legislatures/minimal_example_approved_and_rejected.json", "r") as legislature:
+        requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
+    requests_mock.post(
+        "https://masto.pt/api/v1/statuses",
+        [
+            {"json": {"id": 1, "account": mastodon_account, "mentions": []}},  # approved thread start
+            {"status_code": 422, "text": "Validation failed: Text limite de caracter excedeu 500"},  # approved vote (126516) errors
+            {"json": {"id": 2, "account": mastodon_account, "mentions": []}},  # rejected thread start
+            {"json": {"id": 9000042, "account": mastodon_account, "mentions": []}},  # rejected vote (126496) succeeds
+        ],
+    )
+    update("XVII", tmp_path / "state.json", use_github=True)
+    last_post_id_patches = [r for r in requests_mock.request_history if r.url == StateStorage("XVII").last_post_id_variable_url and r.method == "PATCH"]
+    assert len(last_post_id_patches) == 1
+    assert last_post_id_patches[0].json()["value"] == "9000042"
 
 
 def test_update_posts_multiple_approved_and_rejected_votes_as_threaded_replies(requests_mock, tmp_path, stub_mastodon_api, mastodon_account):
