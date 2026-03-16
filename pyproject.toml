@@ -26,6 +26,7 @@ skip-magic-trailing-comma = true
 [tool.taskipy.tasks]
 compress-state = "PYTHONPATH=. python3 scripts/compress_state.py"
 decompress-state = "PYTHONPATH=. python3 scripts/decompress_state.py"
+count-statuses = "python3 scripts/count_statuses.py"
 delete-statuses = "python3 scripts/delete_statuses.py"
 
 [build-system]

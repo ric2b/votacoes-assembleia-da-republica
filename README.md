@@ -7,7 +7,8 @@ Set `DEBUG_MODE=true` in the environment to enable debug mode and print votes to
 and to not update the stored state.
 
 ### Delete statuses
-1. `poetry run python3 delete_statuses.py <since_minutes_ago>`
+1. `poetry run task count-statuses <since_minutes_ago>` (to double check how many records will be deleted)
+2. `poetry run task delete-statuses <since_minutes_ago>`
 
 ## Tests
 `poetry run pytest`
