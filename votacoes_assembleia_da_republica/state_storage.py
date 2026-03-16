@@ -39,7 +39,7 @@ class StateStorage:
         with open(self.file_path, "w") as state_file:
             json.dump(self.state, state_file)
 
-        if self.use_github:
+        if self.use_github and not self.debug_mode:
             self.update_repo_variable(self.state)
             if self.last_post_id is not None:
                 self.update_last_post_id_variable(self.last_post_id)
@@ -117,6 +117,10 @@ class StateStorage:
     @property
     def gh_variable_url(self):
         return f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/actions/variables/STATE_{self.legislature}"
+
+    @property
+    def debug_mode(self):
+        return os.environ.get("DEBUG_MODE", "false").lower() == "true"
 
     @property
     def gh_token(self):

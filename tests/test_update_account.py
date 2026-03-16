@@ -91,7 +91,7 @@ def test_update_doesnt_crash_if_there_are_no_votes(requests_mock, tmp_path):
         requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
     update("XVII", tmp_path / "state.json", use_github=True)
     assert requests_mock.called
-    assert requests_mock.call_count == 3  # GET to parliament + GET to GitHub + PATCH to GitHub
+    assert requests_mock.call_count == 3  # GET to parliament + GET state + PATCH state
 
 
 def test_render_vote_cuts_down_text_down_to_the_500_char_limit():
@@ -133,14 +133,13 @@ def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tm
             assert _decompress_state(request.json()["value"]) == {"126516": "errored", "126496": "published"}
 
 
-def test_update_makes_no_mastodon_requests_when_debug_mode_is_enabled(requests_mock, tmp_path, monkeypatch):
+def test_update_makes_no_write_requests_when_debug_mode_is_enabled(requests_mock, tmp_path, monkeypatch):
     monkeypatch.setenv("DEBUG_MODE", "true")
     with open("tests/files/legislatures/minimal_example_approved_and_rejected.json", "r") as legislature:
         requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
-    update("XVII", tmp_path / "state.json")
+    update("XVII", tmp_path / "state.json", use_github=True)
     assert requests_mock.called
-    assert all(request.hostname == "app.parlamento.pt" for request in requests_mock.request_history)
-    assert requests_mock.call_count == 1
+    assert not any(r.method in ("POST", "PATCH") for r in requests_mock.request_history)
 
 
 def test_update_creates_one_thread_if_there_are_only_votes_with_one_result(requests_mock, tmp_path, stub_mastodon_api, mastodon_account):
