@@ -86,6 +86,14 @@ def test_update_aborts_if_too_many_new_votes_are_detected(requests_mock, tmp_pat
         update("XVII", tmp_path / "state.json")
 
 
+def test_update_doesnt_crash_if_vote_detail_is_null(requests_mock, tmp_path, stub_mastodon_api, mastodon_account):
+    with open("tests/files/legislatures/nil_vote_detail.json", "r") as legislature:
+        requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
+    requests_mock.post("https://masto.pt/api/v1/statuses", json={"id": 1, "account": mastodon_account, "mentions": []})
+    update("XVII", tmp_path / "state.json", use_github=True)
+    assert any(r.url == "https://masto.pt/api/v1/statuses" for r in requests_mock.request_history)
+
+
 def test_update_doesnt_crash_if_ini_eventos_is_null(requests_mock, tmp_path):
     with open("tests/files/legislatures/nil_ini_eventos.json", "r") as legislature:
         requests_mock.get(JSON_URIS["XVII"], text=legislature.read())

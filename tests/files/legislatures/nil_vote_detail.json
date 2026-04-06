@@ -1,0 +1,23 @@
+[
+  {
+    "IniDescTipo": "Apreciação Parlamentar",
+    "IniTipo": "A",
+    "IniTitulo": "Decreto-Lei n.º 127/2025, de 9 de dezembro",
+    "IniLinkTexto": "http://example.com",
+    "IniAutorGruposParlamentares": [{ "GP": "PS" }],
+    "IniEventos": [
+      {
+        "Fase": "Votação na especialidade",
+        "Votacao": [
+          {
+            "id": "171247",
+            "resultado": "Rejeitado",
+            "detalhe": null,
+            "data": "2026-03-26"
+          }
+        ]
+      }
+    ],
+    "IniNr": "1"
+  }
+]

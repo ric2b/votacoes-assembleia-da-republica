@@ -38,6 +38,8 @@ def parse_vote(raw_vote) -> str | dict[str, list[str]]:
         vote_detail = "unanime"
     elif raw_vote["result"] == "Prejudicado":
         vote_detail = "prejudicado"
+    elif raw_vote["vote_detail"] is None:
+        vote_detail = "sem detalhes"
     else:
         sections = dict(x.split(":") for x in raw_vote["vote_detail"].split("<BR>"))
 
