@@ -148,6 +148,16 @@ def test_update_still_tries_to_save_state_if_a_post_errors_out(requests_mock, tm
             assert _decompress_state(request.json()["value"]) == {"126516": "errored", "126496": "published"}
 
 
+def test_update_doesnt_crash_in_debug_mode_when_last_post_id_is_stored(requests_mock, tmp_path, monkeypatch):
+    monkeypatch.setenv("DEBUG_MODE", "true")
+    monkeypatch.setenv("OVERRIDE_UNSAFE_STATE_CHECK", "false")
+    requests_mock.get(StateStorage("XVII").last_post_id_variable_url, status_code=200, json={"value": "1234"})
+    with open("tests/files/legislatures/minimal_example.json", "r") as legislature:
+        requests_mock.get(JSON_URIS["XVII"], text=legislature.read())
+    update("XVII", tmp_path / "state.json", use_github=True)
+    assert not any(r.method in ("POST", "PATCH") for r in requests_mock.request_history)
+
+
 def test_update_makes_no_write_requests_when_debug_mode_is_enabled(requests_mock, tmp_path, monkeypatch):
     monkeypatch.setenv("DEBUG_MODE", "true")
     with open("tests/files/legislatures/minimal_example_approved_and_rejected.json", "r") as legislature:

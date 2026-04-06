@@ -18,7 +18,7 @@ class MastodonClient:
 
     def latest_post_id(self) -> str | None:
         if self.debug_mode:
-            return None
+            return "debug_mode"
         me = self.client.me()
         statuses = self.client.account_statuses(me["id"], limit=1)
         if not statuses:
