@@ -80,9 +80,7 @@ def parse_authorship(initiative) -> list[str]:
 def parse_initiatives(raw_initiatives) -> list[dict]:
     votes = []
     for initiative in raw_initiatives:
-        events = list_wrap(initiative["IniEventos"])
-
-        for event in events:
+        for event in list_wrap(initiative["IniEventos"] or []):  # initiatives might not have events, or have one event as an object instead of a list
             if event["Votacao"]:
                 for raw_vote in list_wrap(event["Votacao"]):
                     try:

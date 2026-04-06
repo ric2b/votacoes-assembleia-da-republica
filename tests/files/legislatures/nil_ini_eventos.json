@@ -1,0 +1,11 @@
+[
+  {
+    "IniDescTipo": "Projeto de Lei",
+    "IniTipo": "P",
+    "IniTitulo": "Initiative with null IniEventos",
+    "IniLinkTexto": "http://example.com",
+    "IniAutorGruposParlamentares": [{ "GP": "PS" }],
+    "IniEventos": null,
+    "IniNr": "1"
+  }
+]
